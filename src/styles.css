@@ -1,0 +1,124 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-parchment: var(--parchment);
+  --color-ink: var(--ink);
+  --font-display: "Cinzel", serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.16 0.03 250);
+  --foreground: oklch(0.93 0.02 90);
+  --card: oklch(0.21 0.035 250);
+  --card-foreground: oklch(0.93 0.02 90);
+  --primary: oklch(0.72 0.11 85);
+  --primary-foreground: oklch(0.16 0.03 250);
+  --secondary: oklch(0.26 0.04 250);
+  --secondary-foreground: oklch(0.93 0.02 90);
+  --muted: oklch(0.24 0.03 250);
+  --muted-foreground: oklch(0.65 0.03 250);
+  --accent: oklch(0.55 0.15 25);
+  --accent-foreground: oklch(0.95 0.02 90);
+  --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.95 0.02 90);
+  --border: oklch(0.35 0.04 250);
+  --input: oklch(0.35 0.04 250);
+  --ring: oklch(0.72 0.11 85);
+  --gold: oklch(0.72 0.11 85);
+  --parchment: oklch(0.9 0.04 90);
+  --ink: oklch(0.25 0.03 250);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
+  }
+  .ocean-bg {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.24 0.05 250) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 50% 110%, oklch(0.2 0.045 240) 0%, transparent 70%),
+      var(--color-background);
+  }
+  .map-lines {
+    background-image:
+      linear-gradient(oklch(0.72 0.11 85 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.72 0.11 85 / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .ink-reveal {
+    animation: ink-reveal 0.8s ease-out both;
+  }
+  .fade-up {
+    animation: fade-up 0.6s ease-out both;
+  }
+  .compass-spin {
+    animation: compass-spin 40s linear infinite;
+  }
+  .gold-pulse {
+    animation: gold-pulse 3s ease-in-out infinite;
+  }
+}
+
+@keyframes ink-reveal {
+  from { opacity: 0; filter: blur(6px); transform: translateY(8px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes compass-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes gold-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-reveal, .fade-up, .compass-spin, .gold-pulse {
+    animation: none;
+  }
+}
