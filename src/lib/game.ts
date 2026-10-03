@@ -128,7 +128,8 @@ export type GameState = {
   r1Wrong: number;
   r1Skips: number;
   r2Index: number;
-  fragments: number;
+  fragments: number; // unique QR fragments collected (of 9)
+  fragmentIds: number[]; // collected fragment ids — repeat scans are idempotent
   finalQ: number;
   rev: number;
   updatedAt: number;
@@ -154,6 +155,7 @@ export function loadState(): GameState | null {
         localStorage.removeItem(KEY);
         return null;
       }
+      if (!Array.isArray(s.fragmentIds)) s.fragmentIds = [];
       return s;
     }
     if (localStorage.getItem(LEGACY_KEY)) localStorage.removeItem(LEGACY_KEY);
@@ -212,6 +214,7 @@ export function newGame(teamName: string, teamId: string): GameState {
     r1Skips: 0,
     r2Index: 0,
     fragments: 0,
+    fragmentIds: [],
     finalQ: Math.floor(Math.random() * FINAL_QUESTIONS.length),
     rev: 1,
     updatedAt: now,
@@ -234,3 +237,25 @@ export function fmtTime(sec: number): string {
 }
 
 export const TOTAL_FRAGMENTS = 9;
+
+export function isValidFragmentId(id: number): boolean {
+  return Number.isInteger(id) && id >= 1 && id <= TOTAL_FRAGMENTS;
+}
+
+// Idempotent fragment collection: repeat scans of the same id are no-ops.
+export function collectFragment(
+  s: GameState,
+  id: number,
+): { next: GameState; duplicate: boolean; valid: boolean } {
+  if (!isValidFragmentId(id)) return { next: s, duplicate: false, valid: false };
+  const ids = Array.isArray(s.fragmentIds) ? s.fragmentIds : [];
+  if (ids.includes(id)) return { next: s, duplicate: true, valid: true };
+  const nextIds = [...ids, id];
+  const next = withRev({
+    ...s,
+    fragmentIds: nextIds,
+    fragments: Math.min(TOTAL_FRAGMENTS, nextIds.length),
+    teamCode: s.teamCode || normalizeTeamCode(s.teamId),
+  });
+  return { next, duplicate: false, valid: true };
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   QUESTION_BANK, pickRound1, newGame, elapsedSec, normalizeTeamCode, withRev,
+  collectFragment, TOTAL_FRAGMENTS,
 } from "@/lib/game";
 
 describe("Round 1 practical bank", () => {
@@ -48,5 +49,25 @@ describe("team codes + timer", () => {
     const g = newGame("Crew", "CODE-1");
     const n = withRev(g);
     expect(n.rev).toBe(g.rev + 1);
+  });
+});
+
+describe("idempotent fragments", () => {
+  it("counts each id once and rejects out-of-range ids", () => {
+    let g = newGame("Crew", "CODE-1");
+    for (let id = 1; id <= TOTAL_FRAGMENTS; id++) {
+      const r = collectFragment(g, id);
+      expect(r.valid).toBe(true);
+      expect(r.duplicate).toBe(false);
+      g = r.next;
+    }
+    expect(g.fragments).toBe(TOTAL_FRAGMENTS);
+    const dup = collectFragment(g, 3);
+    expect(dup.duplicate).toBe(true);
+    expect(dup.next.fragments).toBe(TOTAL_FRAGMENTS);
+    expect(dup.next.rev).toBe(g.rev);
+    for (const bad of [0, -1, 10, 99]) {
+      expect(collectFragment(g, bad).valid).toBe(false);
+    }
   });
 });
