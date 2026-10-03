@@ -6,6 +6,7 @@ import {
 import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
 import { Shell } from "@/components/GameShell";
 import { Leaderboard } from "@/components/Leaderboard";
+import { QrScanner } from "@/components/QrScanner";
 
 const btn = "w-full min-h-14 px-6 font-display text-sm uppercase bg-primary text-primary-foreground hover:brightness-110 active:scale-[0.98] transition disabled:opacity-40";
 const ghost = "w-full min-h-12 px-6 font-display text-xs uppercase border border-border text-muted-foreground hover:text-foreground hover:border-primary transition disabled:opacity-30";
@@ -274,6 +275,7 @@ function Fragments({ n }: { n: number }) {
 function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
   const step = ROUND2_STEPS[s.r2Index % ROUND2_STEPS.length]!;
   const [found, setFound] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [ans, setAns] = useState("");
   const [err, setErr] = useState(false);
   const isRiddle = step.kind === "riddle";
@@ -304,6 +306,8 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         </form>
       )}
       <p className="text-center text-xs text-muted-foreground">Scan each QR fragment you find. Assemble the real ones to reveal the final map.</p>
+      <button className={ghost} onClick={() => setScanning(true)}>Scan QR with camera</button>
+      {scanning && <QrScanner onClose={() => setScanning(false)} />}
     </div>
   );
 }
