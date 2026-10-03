@@ -107,7 +107,7 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3 border-b border-border bg-background/85 backdrop-blur">
+    <div className="sticky top-0 z-20 flex items-center justify-between pl-5 pr-14 py-3 border-b border-border bg-background/85 backdrop-blur">
       <div className="text-xs text-muted-foreground uppercase tracking-widest truncate">⚓ {s.teamName}</div>
       <div className="flex items-center gap-4">
         <div className="text-right">
