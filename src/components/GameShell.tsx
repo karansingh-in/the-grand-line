@@ -20,13 +20,20 @@ export function Shell({ children, timer }: { children: ReactNode; timer?: ReactN
   return (
     <main className="ocean-bg relative min-h-screen overflow-hidden">
       <div className="map-lines pointer-events-none absolute inset-0" />
+      <div className="grain pointer-events-none absolute inset-0" />
+      <div className="vignette pointer-events-none absolute inset-0" />
       <GithubMark />
       {timer}
       <div
-        className="relative mx-auto min-h-screen w-full max-w-md px-5 pb-16 pt-8 sm:pt-12 flex flex-col justify-center"
-        style={{ paddingBottom: "max(4rem, env(safe-area-inset-bottom))" }}
+        className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-8 sm:pt-12"
+        style={{ paddingBottom: "max(2.5rem, env(safe-area-inset-bottom))" }}
       >
-        {children}
+        <div className="flex flex-1 flex-col justify-center">{children}</div>
+        <footer className="mt-12 text-center">
+          <p className="font-mono text-[9px] uppercase tracking-[0.32em] text-muted-foreground/70">
+            The Grand Line &middot; an expedition in seven charts
+          </p>
+        </footer>
       </div>
     </main>
   );

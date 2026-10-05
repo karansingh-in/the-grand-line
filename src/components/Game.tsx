@@ -1,28 +1,30 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   type GameState,
+  type Round1Q,
+  type TechId,
   loadState,
   saveState,
   resetState,
   newGame,
   elapsedSec,
   fmtTime,
-  ROUND2_STEPS,
+  roman,
+  TOTAL_STOPS,
+  HUNT_STOPS,
+  getStopById,
+  getStopHint,
+  hintKeyForStop,
   FINAL_QUESTIONS,
-  TOTAL_FRAGMENTS,
   normalizeTeamCode,
   withRev,
   spendHint,
-  getStepHint,
-  getFragmentHint,
-  hintKeyForStep,
-  hintKeyForFragment,
+  TECH_BY_ID,
 } from "@/lib/game";
 import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
 import { Shell } from "@/components/GameShell";
 import { Leaderboard } from "@/components/Leaderboard";
-import { QrScanner } from "@/components/QrScanner";
-import { TechIcon } from "@/components/TechIcon";
+import { TechMark } from "@/components/TechMark";
 import {
   Kicker,
   Title,
@@ -30,7 +32,11 @@ import {
   PrimaryButton,
   GhostButton,
   Card,
-  Hairline,
+  ChapterHead,
+  ChartRule,
+  OptionRow,
+  VerseCard,
+  ConfirmButton,
   Progress,
   HintPips,
 } from "@/components/ui";
@@ -41,7 +47,7 @@ export function Compass({ size = 220 }: { size?: number }) {
       width={size}
       height={size}
       viewBox="0 0 200 200"
-      className="compass-spin text-primary opacity-20"
+      className="compass-drift text-primary opacity-20"
       aria-hidden
     >
       <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -155,7 +161,7 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
       <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            Time
+            Elapsed
           </p>
           <p className="font-mono text-2xl tabular-nums text-foreground">
             {fmtTime(elapsedSec(s))}
@@ -180,31 +186,34 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
 
 function Landing({ onEnter }: { onEnter: () => void }) {
   return (
-    <div className="flex flex-col items-center py-8 text-center">
-      <div className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2">
-        <Compass size={380} />
+    <div className="flex flex-col items-center py-10 text-center">
+      <div className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2">
+        <Compass size={400} />
       </div>
-      <div className="relative">
-        <Kicker>N 0&deg;00&prime; &middot; W 0&deg;00&prime;</Kicker>
-        <p className="mt-6 font-display text-[13px] uppercase tracking-[0.34em] text-primary">
+      <div className="relative w-full">
+        <Kicker>An expedition in seven charts &middot; est. 2026</Kicker>
+        <p className="mt-8 font-display text-[13px] uppercase tracking-[0.4em] text-primary">
           The Grand Line
         </p>
-        <h1 className="mt-4 font-display text-5xl leading-[1.02] sm:text-6xl">
+        <h1 className="mt-5 font-display text-[52px] leading-[1.0] sm:text-6xl">
           Technical
           <br />
           Treasure
           <br />
           Hunt
         </h1>
-        <Hairline className="mx-auto mt-8" />
-        <div className="mt-8 space-y-2 text-muted-foreground">
-          <p>Navigate. Decode.</p>
-          <p>Debug. Discover.</p>
+        <ChartRule className="mx-auto mt-10 max-w-[220px]" />
+        <div className="mt-8 space-y-1.5 text-[15px] text-muted-foreground">
+          <p>Ten trials of craft. Seven shores on foot.</p>
+          <p>One crew, one clock, two lifelines.</p>
         </div>
         <div className="mx-auto mt-12 w-full max-w-[280px]">
           <PrimaryButton onClick={onEnter}>Enter the Grand Line</PrimaryButton>
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            Best with your crew beside you
+          </p>
         </div>
-        <div className="mx-auto mt-14 w-full max-w-sm">
+        <div className="mx-auto mt-14 w-full max-w-sm text-left">
           <Leaderboard compact />
         </div>
       </div>
@@ -224,7 +233,7 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
   if (status === "sailing")
     return (
       <div className="py-16 text-center">
-        <Kicker>Setting sail</Kicker>
+        <Kicker className="text-primary">Setting sail</Kicker>
         <Title className="mt-4">
           Your journey
           <br />
@@ -256,14 +265,10 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
       }}
     >
       <div className="text-center">
-        <Kicker>Crew manifest</Kicker>
-        <Title className="mt-4">
-          Enter your
-          <br />
-          crew
-        </Title>
-        <Lede className="mx-auto mt-6 max-w-[280px]">
-          One crew code per team. Teammates enter the same code to sail together.
+        <ChapterHead kicker="Crew manifest" numeral="No. 0" title={<>Enter your crew</>} />
+        <Lede className="mx-auto mt-6 max-w-[300px]">
+          One crew code per team. Teammates enter the same code on their phones to sail the same
+          waters.
         </Lede>
       </div>
       <div className="mt-12 space-y-10">
@@ -301,9 +306,30 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
   );
 }
 
+const FORMAT_LABEL: Record<Round1Q["format"], string> = {
+  "mark-name": "Name the mark",
+  "name-mark": "Find the mark",
+  "snippet-tool": "Read the runes",
+  "scenario-tool": "Choose the vessel",
+};
+
+function MarkStage({ techId, flash }: { techId: TechId; flash: number }) {
+  return (
+    <div className="chart-corners relative mx-auto flex h-60 w-60 items-center justify-center border border-border bg-card text-primary">
+      <TechMark id={techId} size={132} />
+      {flash > 0 && (
+        <span key={flash} className="absolute right-3 top-3 font-mono text-sm text-accent">
+          +10s
+        </span>
+      )}
+    </div>
+  );
+}
+
 function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
   const [flash, setFlash] = useState(0);
   const [wrongPick, setWrongPick] = useState<string | null>(null);
+  const [rightPick, setRightPick] = useState<string | null>(null);
   const q = s.r1Questions[s.r1Index]!;
 
   useEffect(() => {
@@ -327,70 +353,156 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
   const penalty = () => setFlash((f) => f + 1);
 
   const choose = (opt: string) => {
-    setWrongPick(null);
-    if (opt === q.answer) return update((g) => next(g, 0));
+    if (rightPick) return;
+    if (opt === q.answer) {
+      setRightPick(opt);
+      setWrongPick(null);
+      setTimeout(() => {
+        setRightPick(null);
+        update((g) => next(g, 0));
+      }, 450);
+      return;
+    }
     penalty();
     if (s.r1Wrong === 0) {
       setWrongPick(opt);
       update((g) => ({ ...g, penaltySec: g.penaltySec + 10, r1Wrong: 1 }));
-    } else update((g) => next(g, 10));
+    } else {
+      update((g) => next(g, 10));
+    }
   };
   const skip = () => {
     penalty();
     setWrongPick(null);
+    setRightPick(null);
     update((g) => ({ ...next(g, 10), r1Skips: g.r1Skips + 1 }));
   };
 
+  useEffect(() => {
+    setWrongPick(null);
+    setRightPick(null);
+  }, [s.r1Index]);
+
+  const stateOf = (o: string): "idle" | "wrong" | "right" | "dim" => {
+    if (rightPick) return o === rightPick ? "right" : "dim";
+    if (wrongPick === o) return "wrong";
+    return "idle";
+  };
+
   return (
-    <div key={s.r1Index} className="mx-auto w-full max-w-[380px] py-4">
-      <div className="flex items-baseline justify-between">
-        <Kicker>Round 01 &middot; {q.diff}</Kicker>
-        <span className="font-mono text-xs tabular-nums text-muted-foreground">
-          {s.r1Index + 1} / {s.r1Questions.length}
-        </span>
-      </div>
-      <div className="mt-3">
+    <div key={s.r1Index} className="mx-auto w-full max-w-[400px] py-4">
+      <ChapterHead
+        kicker={`Chapter one &middot; ${FORMAT_LABEL[q.format]} &middot; ${q.diff}`}
+        numeral={`${s.r1Index + 1} / ${s.r1Questions.length}`}
+        title={
+          q.format === "mark-name" ? (
+            <>Which tool bears this mark?</>
+          ) : q.format === "name-mark" ? (
+            <>Which mark belongs to {q.name}?</>
+          ) : q.format === "snippet-tool" ? (
+            <>Whose handwriting is this?</>
+          ) : (
+            <>Which vessel for this voyage?</>
+          )
+        }
+      />
+      <div className="mt-4">
         <Progress value={s.r1Index} max={s.r1Questions.length} />
       </div>
 
-      <div className="py-10 text-center">
-        <Card className="relative mx-auto flex h-56 w-56 items-center justify-center text-primary">
-          <TechIcon id={q.techId} size={128} />
-          {flash > 0 && (
-            <span key={flash} className="absolute right-3 top-3 font-mono text-sm text-accent">
-              +10s
-            </span>
-          )}
-        </Card>
-        <h3 className="mt-8 font-display text-2xl">Which tool is this?</h3>
-        <p className="mt-2 text-sm text-muted-foreground">Four names. One mark. Trust your eyes.</p>
+      <div className="py-8">
+        {q.format === "mark-name" && <MarkStage techId={q.techId} flash={flash} />}
+        {q.format === "name-mark" && (
+          <div className="chart-corners relative border border-border bg-card px-6 py-8 text-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Find the mark of
+            </p>
+            <p className="mt-2 font-display text-4xl text-primary">{q.name}</p>
+            {flash > 0 && (
+              <span key={flash} className="absolute right-3 top-3 font-mono text-sm text-accent">
+                +10s
+              </span>
+            )}
+          </div>
+        )}
+        {(q.format === "snippet-tool" || q.format === "scenario-tool") && (
+          <div className="relative border border-border bg-card">
+            <div className="border-b border-border px-5 py-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                {q.format === "snippet-tool" ? "Exhibit A" : "The situation"}
+              </p>
+            </div>
+            {q.format === "snippet-tool" ? (
+              <pre className="overflow-x-auto bg-ink px-5 py-4 font-mono text-[15px] leading-7 text-parchment">
+                {q.prompt}
+              </pre>
+            ) : (
+              <p className="px-5 py-5 text-[16px] leading-8">{q.prompt}</p>
+            )}
+            {flash > 0 && (
+              <span key={flash} className="absolute right-3 top-10 font-mono text-sm text-accent">
+                +10s
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {q.options.map((o) => {
-          const wrong = wrongPick === o;
-          return (
-            <button
+      {q.format === "name-mark" ? (
+        <div className="grid grid-cols-2 gap-3">
+          {q.options.map((o) => {
+            const st = stateOf(o);
+            return (
+              <button
+                key={o}
+                onClick={() => choose(o)}
+                disabled={st === "wrong" || !!rightPick}
+                aria-label={TECH_BY_ID[o as TechId]?.name ?? o}
+                className={`flex min-h-28 flex-col items-center justify-center gap-2 border px-3 py-4 transition active:scale-[0.98] ${
+                  st === "idle"
+                    ? "border-border bg-card text-primary hover:border-primary"
+                    : st === "right"
+                      ? "border-primary text-primary"
+                      : st === "wrong"
+                        ? "border-destructive/60 opacity-40"
+                        : "border-border opacity-40"
+                }`}
+              >
+                <TechMark id={o as TechId} size={52} />
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {TECH_BY_ID[o as TechId]?.name ?? o}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {q.options.map((o, i) => (
+            <OptionRow
               key={o}
+              index={i}
+              state={stateOf(o)}
+              disabled={stateOf(o) !== "idle"}
               onClick={() => choose(o)}
-              disabled={wrong}
-              className={`min-h-16 border px-3 py-4 text-center text-[15px] font-medium transition active:scale-[0.98] ${wrong ? "border-destructive/60 text-muted-foreground opacity-40" : "border-border bg-card hover:border-primary"}`}
             >
               {o}
-            </button>
-          );
-        })}
-      </div>
+            </OptionRow>
+          ))}
+        </div>
+      )}
 
       <div className="mt-8">
-        <GhostButton onClick={skip} disabled={s.r1Skips >= 2}>
-          Skip +10s &middot; {2 - s.r1Skips} left
+        <GhostButton onClick={skip} disabled={s.r1Skips >= 2 || !!rightPick}>
+          Abandon trial +10s &middot; {2 - s.r1Skips} pardons left
         </GhostButton>
-        {s.r1Wrong === 1 && (
-          <p className="mt-4 text-center text-sm text-accent">Not that one. One more attempt.</p>
+        {s.r1Wrong === 1 && !rightPick && (
+          <p className="mt-4 text-center text-sm text-accent">
+            Not that one. A single attempt remains.
+          </p>
         )}
-        <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          Wrong answers cost time
+        <p className="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          Every error and pardon costs the crew ten seconds
         </p>
       </div>
     </div>
@@ -399,23 +511,28 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
 
 function Center({
   kicker,
+  numeral,
   title,
   sub,
   action,
   onAction,
 }: {
   kicker?: string;
+  numeral?: string;
   title: ReactNode;
   sub?: string;
   action: string;
   onAction: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-[340px] py-16 text-center">
+    <div className="mx-auto max-w-[340px] py-14 text-center">
       {kicker && <Kicker className="text-primary">{kicker}</Kicker>}
-      <Title className="mt-4">{title}</Title>
-      {sub && <Lede className="mx-auto mt-6 max-w-[280px]">{sub}</Lede>}
-      <Hairline className="mx-auto mt-8" />
+      <h2 className="mt-4 font-display text-4xl leading-[1.1] sm:text-5xl">{title}</h2>
+      {numeral && (
+        <p className="mt-3 font-display text-sm tracking-[0.3em] text-primary">{numeral}</p>
+      )}
+      {sub && <Lede className="mx-auto mt-6 max-w-[300px]">{sub}</Lede>}
+      <ChartRule className="mx-auto mt-8 max-w-[200px]" />
       <div className="mt-8">
         <PrimaryButton onClick={onAction}>{action}</PrimaryButton>
       </div>
@@ -423,220 +540,153 @@ function Center({
   );
 }
 
-function Fragments({ n }: { n: number }) {
+function ShoreDots({ found, total }: { found: number; total: number }) {
   return (
-    <div className="text-center">
-      <Kicker>
-        Treasure map &middot; {n}/{TOTAL_FRAGMENTS}
-      </Kicker>
-      <div className="mt-4 inline-grid grid-cols-9 gap-2">
-        {Array.from({ length: TOTAL_FRAGMENTS }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-3 w-3 rotate-45 border ${i < n ? "bg-primary border-primary" : "border-border"}`}
-          />
-        ))}
-      </div>
+    <div
+      className="flex items-center justify-center gap-2.5"
+      aria-label={`${found} of ${total} shores found`}
+    >
+      {Array.from({ length: total }).map((_, i) => (
+        <span
+          key={i}
+          className={`h-2.5 w-2.5 rotate-45 border ${i < found ? "bg-primary border-primary" : "border-border"}`}
+        />
+      ))}
     </div>
   );
 }
 
-function HintBlock({
-  label,
-  revealed,
-  left,
-  onUse,
-}: {
-  label: string;
-  revealed?: string | undefined;
-  left: number;
-  onUse: () => void;
-}) {
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    setArmed(false);
-  }, [revealed, left]);
-  if (revealed) {
-    return (
-      <div className="border border-primary/40 bg-card p-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">{label}</p>
-        <p className="mt-2 text-[15px] leading-6">{revealed}</p>
-      </div>
-    );
-  }
-  return (
-    <button
-      onClick={() => {
-        if (left <= 0) return;
-        if (!armed) {
-          setArmed(true);
-          return;
-        }
-        setArmed(false);
-        onUse();
-      }}
-      disabled={left <= 0}
-      className="w-full border border-dashed border-border p-4 text-left transition hover:border-primary disabled:opacity-40"
-    >
-      <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-        {label}
-      </span>
-      <span className="mt-1 block text-sm text-foreground">
-        {left <= 0
-          ? "No hints left."
-          : armed
-            ? "Tap again to spend 1 hint - sure?"
-            : `Stuck? Spend 1 of ${left} hints.`}
-      </span>
-    </button>
-  );
-}
-
 function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
-  const step = ROUND2_STEPS[s.r2Index % ROUND2_STEPS.length]!;
-  const [found, setFound] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const [ans, setAns] = useState("");
-  const [err, setErr] = useState(false);
-  const isRiddle = step.kind === "riddle";
-  const stepKey = hintKeyForStep(s.r2Index);
+  const stopId = s.r2Order[s.r2Pos % s.r2Order.length]!;
+  const stop = getStopById(stopId);
+  const verses = Math.min(3, Math.max(1, s.revealedVerses[String(stopId)] ?? 1));
+  const hintKey = hintKeyForStop(stopId);
+  const revealedHint = s.revealedHints[hintKey];
+  const foundCount = s.r2Found.length;
 
-  useEffect(() => {
-    setFound(false);
-    setAns("");
-    setErr(false);
-  }, [s.r2Index]);
-
-  const submit = () => {
-    if (ans.trim().toLowerCase().replace(/\s+/g, " ") !== step.answer.toLowerCase()) {
-      setErr(true);
-      return;
-    }
-    setAns("");
-    setErr(false);
-    setFound(false);
-    update((g) => ({ ...g, r2Index: g.r2Index + 1 }));
+  const revealVerse = () => {
+    if (verses >= 3) return;
+    update((g) => ({
+      ...g,
+      revealedVerses: { ...g.revealedVerses, [String(stopId)]: verses + 1 },
+    }));
   };
 
-  const spendStepHint = () => {
-    const { next, ok } = spendHint(s, stepKey, getStepHint(s.r2Index));
-    if (!ok) return;
-    update(() => ({ ...next, rev: next.rev }));
-  };
-  const spendFragHint = (id: number) => {
-    const { next, ok } = spendHint(s, hintKeyForFragment(id), getFragmentHint(id));
+  const spendStopHint = () => {
+    const { next, ok } = spendHint(s, hintKey, getStopHint(stopId));
     if (!ok) return;
     update(() => ({ ...next, rev: next.rev }));
   };
 
-  const nextMissing = Array.from({ length: TOTAL_FRAGMENTS }, (_, i) => i + 1).filter(
-    (id) => !(s.fragmentIds ?? []).includes(id),
-  );
+  const claimShore = () => {
+    update((g) => {
+      const cur = g.r2Order[g.r2Pos % g.r2Order.length]!;
+      if (g.r2Found.includes(cur)) return { ...g };
+      const found = [...g.r2Found, cur];
+      const done = found.length >= TOTAL_STOPS;
+      return {
+        ...g,
+        r2Found: found,
+        r2Pos: done ? g.r2Pos : g.r2Pos + 1,
+        phase: done ? "final" : "r2",
+      };
+    });
+  };
 
   return (
-    <div key={s.r2Index} className="mx-auto w-full max-w-[400px] py-4">
-      <Fragments n={s.fragments} />
+    <div key={`${stopId}-${s.r2Pos}`} className="mx-auto w-full max-w-[400px] py-4">
+      <ChapterHead
+        kicker="Chapter two &middot; the walking chart"
+        numeral={`${roman(s.r2Pos + 1)} / VII`}
+        title={<>{stop.title}</>}
+      />
 
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-5">
+        <ShoreDots found={foundCount} total={TOTAL_STOPS} />
+        <p className="mt-3 text-center font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+          {foundCount} of {TOTAL_STOPS} shores claimed &middot; chart {s.r2Pos + 1}
+        </p>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between border-y border-border py-3">
         <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-          Hints
+          Chart notes
         </span>
         <HintPips left={s.hintsLeft} />
       </div>
-      <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        2 hints for the whole hunt. Spend them on any clue or any map fragment.
+      <p className="mt-3 text-[13px] leading-6 text-muted-foreground">
+        Two notes for the whole expedition, spendable on any shore. Verses below are always free.
       </p>
 
-      <article className="mt-6 bg-parchment p-6 text-ink shadow-2xl sm:p-8">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] opacity-60">
-          Ship log &middot; entry {s.r2Index + 1} &middot; {step.kind}
-        </p>
-        <h3 className="mt-2 font-display text-2xl">{step.title}</h3>
-        <p className="mt-4 text-[17px] leading-8">{step.body}</p>
-        {step.code && (
-          <pre className="mt-4 overflow-x-auto bg-ink p-4 font-mono text-sm text-parchment">
-            {step.code}
-          </pre>
-        )}
-      </article>
-
-      <div className="mt-4">
-        <HintBlock
-          label="Clue hint"
-          revealed={s.revealedHints[stepKey]}
-          left={s.hintsLeft}
-          onUse={spendStepHint}
-        />
-        {err && !s.revealedHints[stepKey] && (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Wrong turn. A hint costs nothing but pride — {s.hintsLeft} left.
-          </p>
-        )}
+      <div className="mt-6 space-y-4">
+        {stop.riddles.slice(0, verses).map((v, i) => (
+          <VerseCard key={`${stopId}-${i}`} index={i + 1} total={3} fresh={i === verses - 1}>
+            {v}
+          </VerseCard>
+        ))}
       </div>
 
-      <div className="mt-8">
-        {isRiddle && !found ? (
-          <PrimaryButton onClick={() => setFound(true)}>I found the location</PrimaryButton>
-        ) : (
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-          >
-            <input
-              className={inputCls}
-              placeholder={isRiddle ? "Code from the location / answer" : "Your answer"}
-              value={ans}
-              onChange={(e) => {
-                setAns(e.target.value);
-                setErr(false);
-              }}
-            />
-            {err && <p className="text-sm text-accent">The compass disagrees. Try again.</p>}
-            <PrimaryButton>Submit</PrimaryButton>
-          </form>
-        )}
-      </div>
-
-      <Hairline className="mx-auto mt-12" />
-
-      <div className="mt-8">
-        <Kicker>Map fragments</Kicker>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Scan each QR fragment you find.{" "}
-          {nextMissing.length > 0 ? "Need a nudge on a location?" : "Map complete."}
-        </p>
-        <div className="mt-4 space-y-3">
-          {nextMissing.slice(0, 3).map((id) => {
-            const key = hintKeyForFragment(id);
-            const revealed = s.revealedHints[key];
-            return (
-              <HintBlock
-                key={id}
-                label={`Fragment ${id} of ${TOTAL_FRAGMENTS}`}
-                revealed={revealed}
-                left={s.hintsLeft}
-                onUse={() => spendFragHint(id)}
-              />
-            );
-          })}
+      {verses < 3 ? (
+        <div className="mt-4">
+          <GhostButton onClick={revealVerse}>Reveal the next verse</GhostButton>
         </div>
-        {s.fragments > 0 && (
-          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            Found: {(s.fragmentIds ?? []).sort((a, b) => a - b).join(" · ")}
-          </p>
+      ) : (
+        <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          The chart is fully unrolled
+        </p>
+      )}
+
+      <div className="mt-6">
+        {revealedHint ? (
+          <Card className="border-primary/50 p-5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
+              Chart note &middot; spent
+            </p>
+            <p className="mt-2 text-[15px] leading-7">{revealedHint}</p>
+          </Card>
+        ) : (
+          <ConfirmButton
+            confirmLabel={s.hintsLeft > 0 ? "Tap again to spend 1 note — sure?" : "No notes left"}
+            onConfirm={spendStopHint}
+            disabled={s.hintsLeft <= 0}
+          >
+            Spend a chart note ({s.hintsLeft} left)
+          </ConfirmButton>
         )}
       </div>
 
-      <div className="mt-8 space-y-3">
-        <GhostButton onClick={() => setScanning(true)}>Scan QR with camera</GhostButton>
-        <p className="text-center text-xs text-muted-foreground">
-          Assemble the real ones to reveal the final map.
+      <ChartRule className="mx-auto mt-10 max-w-[240px]" />
+
+      <div className="mt-8">
+        <p className="text-center text-sm leading-6 text-muted-foreground">
+          Stand on the shore. Breathe. Then claim it.
         </p>
+        <div className="mt-4">
+          <ConfirmButton
+            variant="primary"
+            confirmLabel="Tap again — boots on the ground?"
+            onConfirm={claimShore}
+          >
+            Claim this shore
+          </ConfirmButton>
+        </div>
       </div>
-      {scanning && <QrScanner onClose={() => setScanning(false)} />}
+
+      {foundCount > 0 && (
+        <div className="mt-8 border border-border px-5 py-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            Claimed shores
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {s.r2Found.map((id) => (
+              <li key={id} className="flex items-center gap-2 text-sm">
+                <span className="h-1.5 w-1.5 rotate-45 bg-primary" aria-hidden />
+                {getStopById(id).title}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -654,13 +704,13 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
         update((g) => ({ ...g, phase: "complete", endTs: Date.now() }));
       }}
     >
-      <Kicker className="text-primary">Final challenge</Kicker>
+      <Kicker className="text-primary">Final reckoning</Kicker>
       <Title className="mt-4">
         The One
         <br />
         Piece
       </Title>
-      <Hairline className="mx-auto mt-8" />
+      <ChartRule className="mx-auto mt-8 max-w-[200px]" />
       <p className="mt-8 text-lg leading-8">{q.q}</p>
       <input
         className={`${inputCls} mt-8 text-center`}
@@ -682,13 +732,17 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
 function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
   return (
     <div className="flex flex-col items-center py-10 text-center">
-      <div className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2">
+      <div className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2">
         <Compass size={320} />
       </div>
       <div className="relative w-full max-w-[360px]">
         <Kicker className="text-primary">Grand line conquered</Kicker>
-        <Title className="mt-4">The One Piece has been found.</Title>
-        <Hairline className="mx-auto mt-8" />
+        <Title className="mt-4">
+          The One Piece
+          <br />
+          has been found.
+        </Title>
+        <ChartRule className="mx-auto mt-8 max-w-[220px]" />
         <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
           Final time
         </p>
@@ -699,11 +753,20 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
           incl. {s.penaltySec}s penalties &middot; {s.teamName} ({s.teamId})
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Solved {s.r1Questions.length} trials &middot; {s.fragments}/{TOTAL_FRAGMENTS} fragments
-          &middot; {s.r2Index} log entries
+          Solved {s.r1Questions.length} trials &middot; {s.r2Found.length}/{TOTAL_STOPS} shores
+          claimed
         </p>
-        <Hairline className="mx-auto mt-8" />
-        <div className="mt-8 w-full">
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {HUNT_STOPS.map((st) => (
+            <span
+              key={st.id}
+              title={st.title}
+              className={`h-2.5 w-2.5 rotate-45 border ${s.r2Found.includes(st.id) ? "bg-primary border-primary" : "border-border"}`}
+            />
+          ))}
+        </div>
+        <ChartRule className="mx-auto mt-8 max-w-[220px]" />
+        <div className="mt-8 w-full text-left">
           <Leaderboard />
         </div>
         <div className="mt-10 w-full">
@@ -751,19 +814,34 @@ export function Game() {
       case "r1done":
         return (
           <Center
-            kicker="Round one complete"
-            title={<>Your crew has reached the Grand Line.</>}
-            action="Continue"
+            kicker="Chapter one complete"
+            numeral="I / II"
+            title={
+              <>
+                Your crew has reached
+                <br />
+                the Grand Line.
+              </>
+            }
+            sub="Seven shores ahead, each hiding behind three verses. Walk them all."
+            action="Begin the walk"
             onAction={() => update((g) => ({ ...g, phase: "r2intro" }))}
           />
         );
       case "r2intro":
         return (
           <Center
-            kicker="The Grand Line &middot; Round two"
-            title="The hunt begins."
-            sub="Nine fragments. Two hints. Spend them wisely."
-            action="Reveal clue"
+            kicker="Chapter two &middot; the walking chart"
+            numeral="II / II"
+            title={
+              <>
+                Seven shores.
+                <br />
+                Three verses each.
+              </>
+            }
+            sub="Your route is yours alone — no two crews walk the same order. Claim all seven to face the final reckoning."
+            action="Unroll the first verse"
             onAction={() => update((g) => ({ ...g, phase: "r2" }))}
           />
         );

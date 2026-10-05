@@ -22,16 +22,24 @@ export type TechId =
   | "npm"
   | "postman";
 
-export type IconQ = {
+export type Round1Format = "mark-name" | "name-mark" | "snippet-tool" | "scenario-tool";
+
+export type Round1Q = {
   id: string;
+  format: Round1Format;
   techId: TechId;
   name: string;
   answer: string;
   diff: Difficulty;
+  /** Exactly 4 options, shuffled, containing answer. Names for text formats, techIds for mark options. */
   options: string[];
+  /** Shown for snippet/scenario formats. */
+  prompt?: string;
 };
 
-export type PracticalQ = IconQ;
+/** Back-compat alias. */
+export type IconQ = Round1Q;
+export type PracticalQ = Round1Q;
 
 export const TECH_DECK: { id: TechId; name: string; diff: Difficulty }[] = [
   { id: "github", name: "GitHub", diff: "easy" },
@@ -60,210 +68,83 @@ export const TECH_NAME: Record<TechId, string> = Object.fromEntries(
   TECH_DECK.map((t) => [t.id, t.name]),
 ) as Record<TechId, string>;
 
-export const QUESTION_BANK: IconQ[] = TECH_DECK.map((t) => ({
-  id: t.id,
-  techId: t.id,
-  name: t.name,
-  answer: t.name,
-  diff: t.diff,
-  options: [],
-}));
+export const TECH_BY_ID: Record<TechId, { name: string; diff: Difficulty }> = Object.fromEntries(
+  TECH_DECK.map((t) => [t.id, { name: t.name, diff: t.diff }]),
+) as Record<TechId, { name: string; diff: Difficulty }>;
 
-export const CATEGORY_LABEL: Record<string, string> = {
-  git: "GIT",
-  linux: "LINUX",
-  arch: "ARCHITECTURE",
-  ai: "AI / ML",
-  data: "DATA",
-  net: "NETWORK",
-  debug: "DEBUG",
-};
+/** Tools that look alike stay together — wrong answers sting more. */
+const FAMILIES: TechId[][] = [
+  ["docker", "kubernetes"],
+  ["redis", "postgres", "mongodb", "kafka"],
+  ["terraform", "prometheus", "grafana", "nginx", "aws"],
+  ["git", "github"],
+  ["python", "nodejs", "react", "npm"],
+  ["linux", "vscode", "postman"],
+];
 
-export type Challenge = {
-  kind: "riddle" | "output" | "debug" | "git" | "network" | "ai" | "security" | "linux" | "sql";
-  title: string;
-  body: string;
-  code?: string;
-  answer: string;
-  hint?: string;
-};
+function familyOf(id: TechId): TechId[] {
+  return FAMILIES.find((f) => f.includes(id)) ?? [];
+}
 
-export const ROUND2_STEPS: Challenge[] = [
+function pickDistractors(techId: TechId, count: number): TechId[] {
+  const same = shuffle(familyOf(techId).filter((t) => t !== techId));
+  const rest = shuffle(TECH_DECK.map((t) => t.id).filter((t) => t !== techId && !same.includes(t)));
+  return [...same, ...rest].slice(0, count);
+}
+
+export const SNIPPETS: { techId: TechId; code: string }[] = [
+  { techId: "docker", code: "docker run -p 8080:80 treasure:v1" },
+  { techId: "kubernetes", code: "kubectl get pods -n grand-line" },
+  { techId: "git", code: "git rebase -i HEAD~3" },
+  { techId: "redis", code: `SET crew:straw-hats "sailing" EX 3600` },
+  { techId: "postgres", code: "SELECT * FROM crews WHERE bounty > 1000;" },
+  { techId: "terraform", code: "terraform plan -out=harbor.tfplan" },
+  { techId: "prometheus", code: "rate(http_requests_total[5m])" },
+  { techId: "npm", code: "npm ci --omit=dev" },
+  { techId: "nginx", code: "proxy_pass http://fleet:3000;" },
+  { techId: "aws", code: "aws s3 cp map.png s3://grand-line/" },
+];
+
+export const SCENARIOS: { techId: TechId; text: string }[] = [
   {
-    kind: "riddle",
-    title: "First Log Pose",
-    body: "I have keys but open no doors. I have space but no room. You use me to speak to machines. What am I?",
-    answer: "keyboard",
-    hint: "You are typing on one right now.",
+    techId: "kafka",
+    text: "Millions of sensor events must wait in an orderly line before workers process them. What holds the queue?",
   },
   {
-    kind: "output",
-    title: "Output Prediction",
-    body: "What does this Python code print?",
-    code: "x = [1, 2, 3]\ny = x\ny.append(4)\nprint(x)",
-    answer: "[1, 2, 3, 4]",
-    hint: "y is not a copy - it points at the same list.",
+    techId: "mongodb",
+    text: "Player profiles with wildly different shapes and no fixed schema. Where do they live?",
   },
   {
-    kind: "git",
-    title: "Git Challenge",
-    body: "Which Git command creates a new branch named treasure?",
-    answer: "git branch treasure",
-    hint: "git branch <name>",
+    techId: "grafana",
+    text: "The crew wants one wall of charts for every service afloat. What paints the wall?",
   },
   {
-    kind: "debug",
-    title: "Debug the Code",
-    body: "This loop crashes. What is the index of the last valid element?",
-    code: "numbers = [1, 2, 3, 4, 5]\nfor i in range(len(numbers)):\n    print(numbers[i + 1])",
-    answer: "3",
-    hint: "len is 5, i+1 goes out of range",
+    techId: "github",
+    text: "You fork the treasure map and open a pull request against the captain's copy. Where?",
   },
   {
-    kind: "network",
-    title: "Networking",
-    body: "Which protocol translates domain names into IP addresses?",
-    answer: "dns",
-    hint: "Three letters - the phonebook of the internet.",
+    techId: "linux",
+    text: "The deploy script refuses to run until it is blessed executable. Which command blesses it?",
   },
   {
-    kind: "output",
-    title: "Output Prediction",
-    body: "What is printed?",
-    code: "a = 7\nb = 3\nprint(a + b)",
-    answer: "73",
-    hint: "Strings join, they do not add.",
+    techId: "python",
+    text: "Each quest gets an isolated sandbox so package versions never fight. Whose virtual environment is it?",
   },
   {
-    kind: "security",
-    title: "Cybersecurity",
-    body: "Passwords should be stored using which one-way technique?",
-    answer: "hashing",
-    hint: "not encryption",
+    techId: "react",
+    text: "The chart re-renders itself the moment the crew's position state changes. Which library moves the ink?",
   },
   {
-    kind: "ai",
-    title: "AI / ML",
-    body: "What is the name of the data used to teach a machine learning model?",
-    answer: "training data",
-    hint: "two words",
+    techId: "nodejs",
+    text: "JavaScript escapes the browser to serve your harbor API. What runs it on the server?",
   },
   {
-    kind: "riddle",
-    title: "Second Log Pose",
-    body: "The more of me you take, the more you leave behind. What am I?",
-    answer: "steps",
-    hint: "You take them walking across campus.",
+    techId: "postman",
+    text: "You fire a bare GET at the leaderboard API just to inspect the JSON. What did you fire it from?",
   },
   {
-    kind: "linux",
-    title: "Linux Challenge",
-    body: "Which Linux command prints the current working directory?",
-    answer: "pwd",
-    hint: "Three letters: print working ...",
-  },
-  {
-    kind: "riddle",
-    title: "Silent Bell",
-    body: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
-    answer: "echo",
-    hint: "Shout in a stairwell and you will hear me.",
-  },
-  {
-    kind: "output",
-    title: "Truth on Deck",
-    body: "What does this print?",
-    code: "print(2 + 3 * 4)",
-    answer: "14",
-    hint: "multiplication first",
-  },
-  {
-    kind: "debug",
-    title: "Leaky Barrel",
-    body: "This function should return the total, but returns None. What is missing?",
-    code: "def total(xs):\n    s = 0\n    for v in xs:\n        s += v",
-    answer: "return s",
-    hint: "the last line",
-  },
-  {
-    kind: "git",
-    title: "Merge Storm",
-    body: "Your branch is behind main. Which command brings main into your branch?",
-    answer: "git merge main",
-    hint: "merge ...",
-  },
-  {
-    kind: "linux",
-    title: "Permission Reef",
-    body: "Which command makes deploy.sh executable?",
-    answer: "chmod +x deploy.sh",
-    hint: "chmod +x ...",
-  },
-  {
-    kind: "sql",
-    title: "Chart Query",
-    body: "Which query lists all islands with danger above 5?",
-    code: "SELECT * FROM islands WHERE danger > 5;",
-    answer: "select * from islands where danger > 5",
-    hint: "Match the query, lowercase is fine.",
-  },
-  {
-    kind: "network",
-    title: "Harbor Code",
-    body: "Which HTTP status means the treasure was created successfully?",
-    answer: "201",
-    hint: "2xx, not 200",
-  },
-  {
-    kind: "security",
-    title: "Sealed Orders",
-    body: "What technique scrambles a message so only a key-holder can read it?",
-    answer: "encryption",
-    hint: "Opposite of hashing - it reverses.",
-  },
-  {
-    kind: "ai",
-    title: "Overfit Reef",
-    body: "Training accuracy is 99% but test accuracy is 60%. What is this called?",
-    answer: "overfitting",
-    hint: "Starts with over...",
-  },
-  {
-    kind: "output",
-    title: "Loop the Rigging",
-    body: "How many lines does this print?",
-    code: "for i in range(3):\n    for j in range(2):\n        print(i, j)",
-    answer: "6",
-    hint: "3 x 2.",
-  },
-  {
-    kind: "riddle",
-    title: "Captains Clock",
-    body: "What has hands but cannot clap?",
-    answer: "clock",
-    hint: "It hangs on the wall.",
-  },
-  {
-    kind: "debug",
-    title: "Empty Chest",
-    body: "This crashes on an empty list. Which guard fixes it?",
-    code: "def first(xs):\n    return xs[0]",
-    answer: "if xs",
-    hint: "check truthiness first",
-  },
-  {
-    kind: "network",
-    title: "Deep Port",
-    body: "Which port does HTTPS use by default?",
-    answer: "443",
-    hint: "Three digits, starts with 4.",
-  },
-  {
-    kind: "ai",
-    title: "Vector Sea",
-    body: "Numbers that encode word meaning for similarity search are called...",
-    answer: "embeddings",
-    hint: "Starts with em...",
+    techId: "redis",
+    text: "Session tokens must answer in under a millisecond. What remembers them?",
   },
 ];
 
@@ -287,36 +168,111 @@ export const FINAL_QUESTIONS = [
   },
 ];
 
-export const MAX_HINTS = 2;
-
-export const FRAGMENT_HINTS: Record<number, string> = {
-  1: "Start where crews gather - check the notice board by the main entrance foyer.",
-  2: "Where code gets quiet - the library stairwell landing, behind the fire-drill map.",
-  3: "Fuel for sailors - beside the canteen counter, under the menu board.",
-  4: "Push your limits - near the gym door, look for the equipment roster.",
-  5: "Up the rigging - first-floor corridor pillar outside Lab 2.",
-  6: "Debug in the open - the courtyard bench facing the auditorium steps.",
-  7: "Signals in the noise - behind the seminar-hall speaker schedule.",
-  8: "Merge point - the atrium column with club posters, eye-level.",
-  9: "X marks the deck - the final board by the event help desk.",
+export type HuntStop = {
+  /** Stable 1-based id. Hosts: keep ids, edit titles/areas/riddles freely. */
+  id: number;
+  title: string;
+  /** Real-world place. Placeholder until hosts fill in the venue. */
+  area: string;
+  /** Three verses, revealed one at a time — cryptic first, near-explicit last. */
+  riddles: [string, string, string];
+  /** Extra nudge, costs 1 of the team's 2 hints. */
+  nudge: string;
 };
 
-export function hintKeyForStep(index: number): string {
-  return `step-${index}`;
+export const HUNT_STOPS: HuntStop[] = [
+  {
+    id: 1,
+    title: "The Silent Stacks",
+    area: "Library stairwell landing — hosts: set the real spot.",
+    riddles: [
+      "Where the loudest crews learn to whisper, and a thousand voyages sleep upright.",
+      "Climb past the Gazettes of forgotten semesters; I wait where the stairs catch their breath.",
+      "Behind the fire-drill map on the landing — look low, sailor.",
+    ],
+    nudge:
+      "Ground floor of the library block. Face the stairs, check the wall frame on your right.",
+  },
+  {
+    id: 2,
+    title: "The Galley",
+    area: "Canteen counter — hosts: set the real spot.",
+    riddles: [
+      "Sailors run on more than wind. Follow the smell of victory at noon.",
+      "Where tokens change hands for fuel and the queue bends like a river.",
+      "Under the menu board, beside the counter's edge — the mark hides where bills are paid.",
+    ],
+    nudge: "Canteen serving counter. Look beneath the menu board, near the billing corner.",
+  },
+  {
+    id: 3,
+    title: "The Engine Room",
+    area: "Computer lab corridor — hosts: set the real spot.",
+    riddles: [
+      "I hum without sleeping and dream in blue. My heart beats in gigahertz.",
+      "Rows of glowing portholes, one door marked with a number the freshmen fear.",
+      "The pillar outside Lab 2, at shoulder height — the mark keeps watch there.",
+    ],
+    nudge: "First-floor corridor outside Lab 2. Check the pillar facing the lab door.",
+  },
+  {
+    id: 4,
+    title: "The Muster Deck",
+    area: "Main entrance foyer — hosts: set the real spot.",
+    riddles: [
+      "Every voyage begins where all feet first land, beneath the words that name this ship.",
+      "Crews gather, notices flutter, the day's orders are pinned for all to read.",
+      "The big notice board by the main entrance — behind the top-right corner notice.",
+    ],
+    nudge: "Main entrance foyer notice board. Top-right corner, behind the freshest notice.",
+  },
+  {
+    id: 5,
+    title: "The Observatory",
+    area: "Courtyard / open deck — hosts: set the real spot.",
+    riddles: [
+      "No roof, only sky. The wind reads the minutes aloud here.",
+      "Stone benches face the great steps where whole batches have sat and wondered.",
+      "The courtyard bench staring at the auditorium steps — run your hand along its back edge.",
+    ],
+    nudge: "Courtyard bench directly facing the auditorium steps. Feel along the backrest edge.",
+  },
+  {
+    id: 6,
+    title: "The Chart Room",
+    area: "Seminar hall foyer — hosts: set the real spot.",
+    riddles: [
+      "A hundred chairs face one voice, and every whisper returns thrice.",
+      "Speakers and schedules line the wall; the learned gather, the curious linger.",
+      "Behind the speaker schedule outside the seminar hall — the mark sails there.",
+    ],
+    nudge: "Seminar-hall foyer. Behind the printed speaker schedule on the wall.",
+  },
+  {
+    id: 7,
+    title: "The Harbor Office",
+    area: "Event help desk — hosts: set the real spot.",
+    riddles: [
+      "When lost, sailors ask the lighthouse. It answers every question except where the rum went.",
+      "Banners, badges, and the calmest humans on campus — the voyage is administered here.",
+      "The event help desk board — the final mark waits where you first signed in.",
+    ],
+    nudge: "Event help desk. Check the board where crews registered this morning.",
+  },
+];
+
+export function getStopById(id: number): HuntStop {
+  return HUNT_STOPS.find((s) => s.id === id) ?? HUNT_STOPS[0]!;
 }
 
-export function hintKeyForFragment(id: number): string {
-  return `frag-${id}`;
+export const MAX_HINTS = 2;
+
+export function hintKeyForStop(id: number): string {
+  return `stop-${id}`;
 }
 
-export function getStepHint(index: number): string {
-  const step = ROUND2_STEPS[index % ROUND2_STEPS.length];
-  if (step?.hint) return step.hint;
-  return "Read the clue aloud, slowly. The answer is simpler than it looks.";
-}
-
-export function getFragmentHint(id: number): string {
-  return FRAGMENT_HINTS[id] ?? "Ask the help desk for the sector of this fragment.";
+export function getStopHint(id: number): string {
+  return getStopById(id).nudge;
 }
 
 export type GameState = {
@@ -327,37 +283,53 @@ export type GameState = {
   startTs: number | null;
   penaltySec: number;
   endTs: number | null;
-  r1Questions: IconQ[];
+  r1Questions: Round1Q[];
   r1Index: number;
   r1Wrong: number;
   r1Skips: number;
-  r2Index: number;
-  fragments: number;
-  fragmentIds: number[];
+  /** Shuffled order of stop ids — different for every crew. */
+  r2Order: number[];
+  /** Position inside r2Order. */
+  r2Pos: number;
+  /** Stop ids already marked found. */
+  r2Found: number[];
+  /** Verses revealed per stop id (1..3). */
+  revealedVerses: Record<string, number>;
   finalQ: number;
   rev: number;
   updatedAt: number;
+  /** Hints remaining for the whole run (shared across devices). */
   hintsLeft: number;
+  /** Revealed hint nudges by stable key (`stop-N`) → text. */
   revealedHints: Record<string, string>;
 };
 
-const KEY = "grandline-state-v3";
-const LEGACY_KEYS = ["grandline-state-v2", "grandline-state-v1"];
+const KEY = "grandline-state-v4";
+const LEGACY_KEYS = ["grandline-state-v3", "grandline-state-v2", "grandline-state-v1"];
 
 export function normalizeTeamCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "-").slice(0, 32);
 }
 
 function isLegacyR1(q: unknown): boolean {
-  if (!q || typeof q !== "object") return false;
+  if (!q || typeof q !== "object") return true;
   const r = q as Record<string, unknown>;
-  return "slug" in r || "body" in r || "title" in r;
+  // v4 questions always carry a format field.
+  return !("format" in r);
 }
 
-function withHints(s: GameState): GameState {
+function isLegacyState(s: GameState): boolean {
+  if (!Array.isArray(s.r1Questions) || s.r1Questions.length === 0) return true;
+  if (isLegacyR1(s.r1Questions[0])) return true;
+  if (!Array.isArray(s.r2Order) || s.r2Order.length !== TOTAL_STOPS) return true;
+  return false;
+}
+
+function withDefaults(s: GameState): GameState {
   if (typeof s.hintsLeft !== "number") s.hintsLeft = MAX_HINTS;
   if (!s.revealedHints || typeof s.revealedHints !== "object") s.revealedHints = {};
-  if (!Array.isArray(s.fragmentIds)) s.fragmentIds = [];
+  if (!s.revealedVerses || typeof s.revealedVerses !== "object") s.revealedVerses = {};
+  if (!Array.isArray(s.r2Found)) s.r2Found = [];
   return s;
 }
 
@@ -366,12 +338,11 @@ export function loadState(): GameState | null {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const s = JSON.parse(raw) as GameState;
-      if (!Array.isArray(s.r1Questions) || s.r1Questions.length === 0) return null;
-      if (isLegacyR1(s.r1Questions[0])) {
+      if (isLegacyState(s)) {
         localStorage.removeItem(KEY);
         return null;
       }
-      return withHints(s);
+      return withDefaults(s);
     }
     for (const k of LEGACY_KEYS) {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
@@ -405,24 +376,90 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildIconQuestion(tech: { id: TechId; name: string; diff: Difficulty }): IconQ {
-  const distract = shuffle(TECH_DECK.filter((t) => t.id !== tech.id)).slice(0, 3);
-  const options = shuffle([tech.name, ...distract.map((d) => d.name)]);
-  return {
-    id: `icon-${tech.id}`,
-    techId: tech.id,
-    name: tech.name,
-    answer: tech.name,
-    diff: tech.diff,
-    options,
-  };
+function nameOptions(techId: TechId): [string, string, string, string] {
+  const names = [
+    TECH_BY_ID[techId]!.name,
+    ...pickDistractors(techId, 3).map((t) => TECH_BY_ID[t]!.name),
+  ];
+  return shuffle(names) as [string, string, string, string];
 }
 
-export function pickRound1(): IconQ[] {
-  const easy = shuffle(TECH_DECK.filter((q) => q.diff === "easy")).slice(0, 4);
-  const med = shuffle(TECH_DECK.filter((q) => q.diff === "medium")).slice(0, 4);
-  const hard = shuffle(TECH_DECK.filter((q) => q.diff === "hard")).slice(0, 2);
-  return shuffle([...easy, ...med, ...hard]).map(buildIconQuestion);
+function markOptions(techId: TechId): [string, string, string, string] {
+  return shuffle([techId, ...pickDistractors(techId, 3)]) as [string, string, string, string];
+}
+
+function takeTech(diff: Difficulty, exclude: Set<TechId>): TechId {
+  const pool = shuffle(TECH_DECK.filter((t) => t.diff === diff && !exclude.has(t.id)));
+  const pick = pool[0] ?? shuffle(TECH_DECK.filter((t) => !exclude.has(t.id)))[0]!;
+  exclude.add(pick.id);
+  return pick.id;
+}
+
+function takeSnippet(exclude: Set<TechId>): { techId: TechId; code: string } {
+  const pool = shuffle(SNIPPETS.filter((s) => !exclude.has(s.techId)));
+  const pick = pool[0] ?? shuffle(SNIPPETS)[0]!;
+  exclude.add(pick.techId);
+  return pick;
+}
+
+function takeScenario(exclude: Set<TechId>): { techId: TechId; text: string } {
+  const pool = shuffle(SCENARIOS.filter((s) => !exclude.has(s.techId)));
+  const pick = pool[0] ?? shuffle(SCENARIOS)[0]!;
+  exclude.add(pick.techId);
+  return pick;
+}
+
+/**
+ * 10 questions per game, harder than before:
+ * 4 mark→name (easy, easy, medium, hard),
+ * 2 name→mark (medium, hard),
+ * 2 snippet→tool (medium, hard),
+ * 2 scenario→tool (easy, medium).
+ */
+export function pickRound1(): Round1Q[] {
+  const used = new Set<TechId>();
+  const qs: Round1Q[] = [];
+  const mk = (format: Round1Format, techId: TechId, extra: Partial<Round1Q> = {}): Round1Q => {
+    const name = TECH_BY_ID[techId]!.name;
+    const diff = TECH_BY_ID[techId]!.diff;
+    const textOptions = format !== "name-mark";
+    return {
+      id: `${format}-${techId}`,
+      format,
+      techId,
+      name,
+      answer: textOptions ? name : techId,
+      diff,
+      options: textOptions ? nameOptions(techId) : markOptions(techId),
+      ...extra,
+    };
+  };
+
+  for (const d of ["easy", "easy", "medium", "hard"] as Difficulty[]) {
+    qs.push(mk("mark-name", takeTech(d, used)));
+  }
+  for (const d of ["medium", "hard"] as Difficulty[]) {
+    qs.push(mk("name-mark", takeTech(d, used)));
+  }
+  for (const d of ["medium", "hard"] as Difficulty[]) {
+    void d;
+    const s = takeSnippet(used);
+    qs.push(mk("snippet-tool", s.techId, { prompt: s.code }));
+  }
+  for (const d of ["easy", "medium"] as Difficulty[]) {
+    void d;
+    const s = takeScenario(used);
+    const q = mk("scenario-tool", s.techId, { prompt: s.text });
+    // Scenario difficulty skews easier; mark hard-tech scenarios hard.
+    q.diff = TECH_BY_ID[s.techId]!.diff === "hard" ? "hard" : q.diff;
+    qs.push(q);
+  }
+  return shuffle(qs);
+}
+
+/** Every crew sails a different route through the same seven shores. */
+export function shuffledStopOrder(): number[] {
+  return shuffle(HUNT_STOPS.map((s) => s.id));
 }
 
 export function newGame(teamName: string, teamId: string): GameState {
@@ -439,9 +476,10 @@ export function newGame(teamName: string, teamId: string): GameState {
     r1Index: 0,
     r1Wrong: 0,
     r1Skips: 0,
-    r2Index: 0,
-    fragments: 0,
-    fragmentIds: [],
+    r2Order: shuffledStopOrder(),
+    r2Pos: 0,
+    r2Found: [],
+    revealedVerses: {},
     finalQ: Math.floor(Math.random() * FINAL_QUESTIONS.length),
     rev: 1,
     updatedAt: now,
@@ -450,6 +488,7 @@ export function newGame(teamName: string, teamId: string): GameState {
   };
 }
 
+/** Reveal a hint nudge if the team has any left. Idempotent per key. */
 export function spendHint(
   s: GameState,
   key: string,
@@ -480,25 +519,10 @@ export function fmtTime(sec: number): string {
   return h > 0 ? `${String(h).padStart(2, "0")}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-export const TOTAL_FRAGMENTS = 9;
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
-export function isValidFragmentId(id: number): boolean {
-  return Number.isInteger(id) && id >= 1 && id <= TOTAL_FRAGMENTS;
+export function roman(n: number): string {
+  return ROMAN[n - 1] ?? String(n);
 }
 
-export function collectFragment(
-  s: GameState,
-  id: number,
-): { next: GameState; duplicate: boolean; valid: boolean } {
-  if (!isValidFragmentId(id)) return { next: s, duplicate: false, valid: false };
-  const ids = Array.isArray(s.fragmentIds) ? s.fragmentIds : [];
-  if (ids.includes(id)) return { next: s, duplicate: true, valid: true };
-  const nextIds = [...ids, id];
-  const next = withRev({
-    ...s,
-    fragmentIds: nextIds,
-    fragments: Math.min(TOTAL_FRAGMENTS, nextIds.length),
-    teamCode: s.teamCode || normalizeTeamCode(s.teamId),
-  });
-  return { next, duplicate: false, valid: true };
-}
+export const TOTAL_STOPS = 7;

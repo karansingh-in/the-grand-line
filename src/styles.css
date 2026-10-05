@@ -152,7 +152,61 @@
   .ink-reveal,
   .fade-up,
   .compass-spin,
+  .compass-drift,
   .gold-pulse {
     animation: none;
+  }
+}
+.compass-drift {
+  animation: compass-drift 24s ease-in-out infinite;
+}
+.grain {
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27/%3E%3CfeColorMatrix values=%270 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0%27/%3E%3C/filter%3E%3Crect width=%27120%27 height=%27120%27 filter=%27url(%23n)%27/%3E%3C/svg%3E");
+}
+.vignette {
+  background: radial-gradient(
+    ellipse 110% 90% at 50% 40%,
+    transparent 55%,
+    oklch(0.1 0.02 250 / 0.55) 100%
+  );
+}
+.tech-mark {
+  display: inline-flex;
+}
+.tech-mark svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+.chart-corners::before,
+.chart-corners::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--color-primary);
+  opacity: 0.8;
+}
+.chart-corners::before {
+  top: 8px;
+  left: 8px;
+  border-top: 1px solid var(--color-primary);
+  border-left: 1px solid var(--color-primary);
+}
+.chart-corners::after {
+  bottom: 8px;
+  right: 8px;
+  border-bottom: 1px solid var(--color-primary);
+  border-right: 1px solid var(--color-primary);
+}
+
+@keyframes compass-drift {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(8deg);
   }
 }
