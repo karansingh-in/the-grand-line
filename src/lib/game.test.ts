@@ -96,6 +96,19 @@ describe("physical round 2: seven shores, shuffled per crew", () => {
     expect(new Set(g.r2Order).size).toBe(7);
     expect(g.r2Pos).toBe(0);
     expect(g.r2Found).toEqual([]);
+    for (const id of g.r2Order) {
+      expect(g.r2Verses[String(id)]).toBeGreaterThanOrEqual(0);
+      expect(g.r2Verses[String(id)]).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it("deals a random verse per stop, varying across crews", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 20; i++) {
+      const g = newGame("Crew", "CODE-" + i);
+      seen.add(g.r2Order.map((id) => g.r2Verses[String(id)]).join(""));
+    }
+    expect(seen.size).toBeGreaterThan(1);
   });
 
   it("roman numerals for charts", () => {

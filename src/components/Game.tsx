@@ -33,6 +33,7 @@ import {
   ChapterHead,
   ChartRule,
   OptionRow,
+  OptionGroup,
   VerseCard,
   ConfirmButton,
   Progress,
@@ -155,7 +156,7 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
+    <div className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
@@ -206,7 +207,7 @@ function Landing({ onEnter }: { onEnter: () => void }) {
           {TEASER.map((t) => (
             <span
               key={t}
-              className="flex h-14 w-14 items-center justify-center bg-parchment shadow-xl"
+              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-parchment shadow-xl"
             >
               <TechMark id={t} size={34} />
             </span>
@@ -334,7 +335,7 @@ function Specimen({
 }) {
   return (
     <figure className="mx-auto w-full max-w-[300px]">
-      <div className="chart-corners relative flex h-64 items-center justify-center bg-parchment shadow-2xl">
+      <div className="relative flex h-64 items-center justify-center rounded-[24px] bg-parchment shadow-[0_24px_60px_-24px_rgb(0_0_0/0.65)]">
         <TechMark id={techId} size={148} />
         {flash > 0 && (
           <span key={flash} className="absolute right-4 top-4 font-mono text-sm text-accent">
@@ -438,20 +439,19 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         />
       </div>
 
-      <div className="space-y-3">
+      <OptionGroup>
         {q.options.map((o, i) => (
-          <div key={o} className="fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-            <OptionRow
-              index={i}
-              state={stateOf(o)}
-              disabled={stateOf(o) !== "idle"}
-              onClick={() => choose(o)}
-            >
-              {o}
-            </OptionRow>
-          </div>
+          <OptionRow
+            key={o}
+            index={i}
+            state={stateOf(o)}
+            disabled={stateOf(o) !== "idle"}
+            onClick={() => choose(o)}
+          >
+            {o}
+          </OptionRow>
         ))}
-      </div>
+      </OptionGroup>
 
       <div className="mt-8">
         <GhostButton onClick={skip} disabled={s.r1Skips >= 2 || !!rightPick}>
@@ -520,6 +520,7 @@ function ShoreDots({ found, total }: { found: number; total: number }) {
 function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
   const stopId = s.r2Order[s.r2Pos % s.r2Order.length]!;
   const stop = getStopById(stopId);
+  const verseIdx = Math.min(2, Math.max(0, s.r2Verses[String(stopId)] ?? 0));
   const hintKey = hintKeyForStop(stopId);
   const revealedHint = s.revealedHints[hintKey];
   const foundCount = s.r2Found.length;
@@ -560,12 +561,13 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         </p>
       </div>
 
-      <div className="mt-6 space-y-4">
-        {stop.riddles.map((v, i) => (
-          <VerseCard key={`${stopId}-${i}`} index={i + 1} total={3}>
-            {v}
-          </VerseCard>
-        ))}
+      <div className="mt-6">
+        <VerseCard index={verseIdx + 1} total={3} fresh>
+          {stop.riddles[verseIdx]!}
+        </VerseCard>
+        <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          The only verse your crew was dealt — make it count
+        </p>
       </div>
 
       <div className="mt-6 flex items-center justify-between border-y border-border py-3">
@@ -762,7 +764,7 @@ export function Game() {
                 the Grand Line.
               </>
             }
-            sub="Seven shores ahead, three verses each. Walk them all."
+            sub="Seven shores ahead, one verse per shore. Walk them all."
             action="Begin the walk"
             onAction={() => update((g) => ({ ...g, phase: "r2intro" }))}
           />
@@ -776,10 +778,10 @@ export function Game() {
               <>
                 Seven shores.
                 <br />
-                Three verses each.
+                One verse each.
               </>
             }
-            sub="Your route is yours alone — no two crews walk the same order. Claim all seven to face the final reckoning."
+            sub="Your route is yours alone — no two crews walk the same order, and each shore shows your crew a single verse. Claim all seven to face the final reckoning."
             action="Unroll the first chart"
             onAction={() => update((g) => ({ ...g, phase: "r2" }))}
           />

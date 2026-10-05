@@ -235,6 +235,8 @@ export type GameState = {
   r2Pos: number;
   /** Stop ids already marked found. */
   r2Found: number[];
+  /** Verse dealt to this crew per stop id (0, 1, or 2) — one of three, fixed at deal time. */
+  r2Verses: Record<string, number>;
   finalQ: number;
   rev: number;
   updatedAt: number;
@@ -244,7 +246,7 @@ export type GameState = {
   revealedHints: Record<string, string>;
 };
 
-const KEY = "grandline-state-v5";
+const KEY = "grandline-state-v6";
 const LEGACY_KEYS = [
   "grandline-state-v4",
   "grandline-state-v3",
@@ -268,6 +270,7 @@ function isLegacyState(s: GameState): boolean {
   if (!Array.isArray(s.r1Questions) || s.r1Questions.length === 0) return true;
   if (isLegacyR1(s.r1Questions[0])) return true;
   if (!Array.isArray(s.r2Order) || s.r2Order.length !== TOTAL_STOPS) return true;
+  if (!s.r2Verses || typeof s.r2Verses !== "object") return true;
   return false;
 }
 
@@ -356,6 +359,11 @@ export function pickRound1(): Round1Q[] {
   return shuffle(qs);
 }
 
+/** Each crew is dealt one of the three verses per shore — fixed for the whole run. */
+function dealVerses(): Record<string, number> {
+  return Object.fromEntries(HUNT_STOPS.map((s) => [String(s.id), Math.floor(Math.random() * 3)]));
+}
+
 /** Every crew sails a different route through the same seven shores. */
 export function shuffledStopOrder(): number[] {
   return shuffle(HUNT_STOPS.map((s) => s.id));
@@ -378,6 +386,7 @@ export function newGame(teamName: string, teamId: string): GameState {
     r2Order: shuffledStopOrder(),
     r2Pos: 0,
     r2Found: [],
+    r2Verses: dealVerses(),
     finalQ: Math.floor(Math.random() * FINAL_QUESTIONS.length),
     rev: 1,
     updatedAt: now,

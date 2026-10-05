@@ -2,8 +2,9 @@
 
 A mobile-first companion web app for a physical college treasure hunt.
 Teams sail through two chapters on one continuous clock — ten trials of
-craft (name the tool, read the runes), then a walking chart: seven shores
-across campus, three verses each, every crew dealt a different route.
+craft (name the tool from its real mark), then a walking chart: seven
+shores across campus, every crew dealt a different route and a single
+random verse per shore.
 
 ## Run locally
 
@@ -28,7 +29,7 @@ runs in local-only mode.
 
 Seven stops live in `src/lib/game.ts` (`HUNT_STOPS`). Each has a title, an
 `area` (the real place), three `riddles` (cryptic first, near-explicit
-last), and a `nudge` (costs the team 1 of its 2 chart notes). Replace the
+last — each crew is dealt one at random), and a `nudge` (costs the team 1 of its 2 chart notes). Replace the
 placeholder areas/riddles with your venue before the event. Every crew is
 dealt all seven stops in a shuffled order, so routes differ per team.
 

@@ -40,9 +40,9 @@ export function PrimaryButton({
     <button
       {...rest}
       className={cn(
-        "w-full min-h-14 px-6 font-display text-[13px] uppercase tracking-[0.18em]",
+        "w-full min-h-14 px-6 font-display text-[13px] uppercase tracking-[0.18em] rounded-full shadow-[0_12px_32px_-12px_rgb(0_0_0/0.6)]",
         "bg-primary text-primary-foreground",
-        "hover:brightness-110 active:scale-[0.98] transition",
+        "hover:brightness-110 active:scale-[0.97] transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
         "disabled:opacity-40 disabled:pointer-events-none",
         className,
       )}
@@ -61,9 +61,9 @@ export function GhostButton({
     <button
       {...rest}
       className={cn(
-        "w-full min-h-12 px-6 font-display text-[11px] uppercase tracking-[0.2em]",
+        "w-full min-h-12 px-6 font-display text-[11px] uppercase tracking-[0.2em] rounded-full",
         "border border-border text-muted-foreground",
-        "hover:text-foreground hover:border-primary transition",
+        "hover:text-foreground hover:border-primary/70 hover:bg-muted/30 transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]",
         "disabled:opacity-30 disabled:pointer-events-none",
         className,
       )}
@@ -74,7 +74,9 @@ export function GhostButton({
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("border border-border bg-card", className)}>{children}</div>;
+  return (
+    <div className={cn("border border-border bg-card rounded-[20px]", className)}>{children}</div>
+  );
 }
 
 export function Hairline({ className }: { className?: string }) {
@@ -171,11 +173,11 @@ export function OptionRow({
     <button
       {...rest}
       className={cn(
-        "group flex min-h-16 w-full items-center gap-4 border px-4 py-3 text-left transition active:scale-[0.99]",
-        state === "idle" && "border-border bg-card hover:border-primary",
-        state === "wrong" && "border-destructive/60 opacity-45",
-        state === "right" && "border-primary",
-        state === "dim" && "border-border opacity-50",
+        "group flex min-h-[60px] w-full items-center gap-4 px-5 py-4 text-left transition-all duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] active:bg-muted/60",
+        state === "idle" && "hover:bg-muted/40",
+        state === "wrong" && "opacity-45",
+        state === "right" && "bg-primary/10",
+        state === "dim" && "opacity-50",
       )}
     >
       <span
@@ -188,6 +190,15 @@ export function OptionRow({
       </span>
       <span className="flex-1 text-[15px] font-medium leading-6">{children}</span>
     </button>
+  );
+}
+
+/** iOS-style inset grouped list for options. */
+export function OptionGroup({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-[20px] border border-border bg-card divide-y divide-border shadow-[0_16px_48px_-24px_rgb(0_0_0/0.7)]">
+      {children}
+    </div>
   );
 }
 
@@ -204,11 +215,16 @@ export function VerseCard({
   fresh?: boolean;
 }) {
   return (
-    <div className={cn("bg-parchment p-5 text-ink shadow-2xl", fresh && "ink-reveal")}>
+    <div
+      className={cn(
+        "bg-parchment rounded-[20px] p-6 sm:p-7 text-ink shadow-[0_24px_60px_-24px_rgb(0_0_0/0.65)]",
+        fresh && "ink-reveal",
+      )}
+    >
       <p className="font-mono text-[10px] uppercase tracking-[0.28em] opacity-60">
         Verse {index} of {total}
       </p>
-      <p className="mt-2 font-display text-[19px] leading-8">{children}</p>
+      <p className="mt-2 font-display text-[20px] leading-9">{children}</p>
     </div>
   );
 }
