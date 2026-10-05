@@ -31,7 +31,7 @@ export function Shell({ children, timer }: { children: ReactNode; timer?: ReactN
         <div className="flex flex-1 flex-col justify-center">{children}</div>
         <footer className="mt-12 text-center">
           <p className="font-mono text-[9px] uppercase tracking-[0.32em] text-muted-foreground/70">
-            The Grand Line &middot; an expedition in seven charts
+            Hack the Hunt &middot; organized by SHAIDS
           </p>
         </footer>
       </div>

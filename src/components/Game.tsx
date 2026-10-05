@@ -191,14 +191,14 @@ function Landing({ onEnter }: { onEnter: () => void }) {
         <Compass size={400} />
       </div>
       <div className="relative w-full">
-        <Kicker>An expedition in seven charts &middot; est. 2026</Kicker>
+        <Kicker>Organized by SHAIDS &middot; est. 2026</Kicker>
         <p className="mt-8 font-display text-[13px] uppercase tracking-[0.4em] text-primary">
-          The Grand Line
+          Hack the Hunt
         </p>
         <h1 className="mt-5 font-display text-[52px] leading-[1.0] sm:text-6xl">
-          Technical
+          Hack
           <br />
-          Treasure
+          the
           <br />
           Hunt
         </h1>
@@ -221,7 +221,7 @@ function Landing({ onEnter }: { onEnter: () => void }) {
           <p>One crew, one clock, two lifelines.</p>
         </div>
         <div className="mx-auto mt-12 w-full max-w-[280px]">
-          <PrimaryButton onClick={onEnter}>Enter the Grand Line</PrimaryButton>
+          <PrimaryButton onClick={onEnter}>Enter the Hunt</PrimaryButton>
           <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             Best with your crew beside you
           </p>
@@ -252,7 +252,7 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
           <br />
           begins.
         </Title>
-        <Lede className="mx-auto mt-6 max-w-[280px]">{joinMsg || "The Grand Line awaits."}</Lede>
+        <Lede className="mx-auto mt-6 max-w-[280px]">{joinMsg || "The hunt awaits."}</Lede>
       </div>
     );
 
@@ -272,7 +272,7 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
           return;
         }
         const fresh = newGame(name.trim(), id.trim());
-        setJoinMsg("The Grand Line awaits.");
+        setJoinMsg("The hunt awaits.");
         setStatus("sailing");
         setTimeout(() => onStart(fresh), 1400);
       }}
@@ -647,9 +647,9 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
     >
       <Kicker className="text-primary">Final reckoning</Kicker>
       <Title className="mt-4">
-        The One
+        The Final
         <br />
-        Piece
+        Flag
       </Title>
       <ChartRule className="mx-auto mt-8 max-w-[200px]" />
       <p className="mt-8 text-lg leading-8">{q.q}</p>
@@ -677,11 +677,11 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
         <Compass size={320} />
       </div>
       <div className="relative w-full max-w-[360px]">
-        <Kicker className="text-primary">Grand line conquered</Kicker>
+        <Kicker className="text-primary">Hunt complete</Kicker>
         <Title className="mt-4">
-          The One Piece
+          The flag
           <br />
-          has been found.
+          is yours.
         </Title>
         <ChartRule className="mx-auto mt-8 max-w-[220px]" />
         <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -759,9 +759,9 @@ export function Game() {
             numeral="I / II"
             title={
               <>
-                Your crew has reached
+                Your crew is in.
                 <br />
-                the Grand Line.
+                The hunt is on.
               </>
             }
             sub="Seven shores ahead, one verse per shore. Walk them all."

@@ -3,7 +3,7 @@ import { Shell } from "@/components/GameShell";
 import { Leaderboard } from "@/components/Leaderboard";
 
 export const Route = createFileRoute("/leaderboard")({
-  head: () => ({ meta: [{ title: "Top Crews - The Grand Line" }] }),
+  head: () => ({ meta: [{ title: "Top Crews - Hack the Hunt" }] }),
   component: () => (
     <Shell>
       <div className="mx-auto max-w-[360px] py-10 text-center">

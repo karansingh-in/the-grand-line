@@ -58,7 +58,7 @@ export function Leaderboard({ compact = false }: { compact?: boolean }) {
         <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
           Top crews
         </p>
-        <p className="mt-3 text-sm text-muted-foreground">No crew has claimed the One Piece yet.</p>
+        <p className="mt-3 text-sm text-muted-foreground">No crew has captured the flag yet.</p>
       </div>
     );
   }
