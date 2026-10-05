@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   TECH_DECK,
-  SNIPPETS,
-  SCENARIOS,
   pickRound1,
   newGame,
   elapsedSec,
@@ -19,40 +17,35 @@ import {
   roman,
 } from "@/lib/game";
 
-describe("Round 1 mixed-format bank", () => {
+describe("Round 1 identification bank", () => {
   it("has 20 techs with easy/medium/hard coverage", () => {
     expect(TECH_DECK).toHaveLength(20);
     expect(TECH_DECK.filter((q) => q.diff === "easy").length).toBeGreaterThanOrEqual(3);
     expect(TECH_DECK.filter((q) => q.diff === "medium").length).toBeGreaterThanOrEqual(4);
-    expect(TECH_DECK.filter((q) => q.diff === "hard").length).toBeGreaterThanOrEqual(2);
+    expect(TECH_DECK.filter((q) => q.diff === "hard").length).toBeGreaterThanOrEqual(3);
   });
 
-  it("picks 10 with 4 mark-name / 2 name-mark / 2 snippet / 2 scenario", () => {
+  it("picks 10 name-the-mark trials with 4 name options each", () => {
     for (let i = 0; i < 30; i++) {
       const picked = pickRound1();
       expect(picked).toHaveLength(10);
-      expect(picked.filter((q) => q.format === "mark-name")).toHaveLength(4);
-      expect(picked.filter((q) => q.format === "name-mark")).toHaveLength(2);
-      expect(picked.filter((q) => q.format === "snippet-tool")).toHaveLength(2);
-      expect(picked.filter((q) => q.format === "scenario-tool")).toHaveLength(2);
+      expect(picked.filter((q) => q.diff === "easy")).toHaveLength(3);
+      expect(picked.filter((q) => q.diff === "medium")).toHaveLength(4);
+      expect(picked.filter((q) => q.diff === "hard")).toHaveLength(3);
       const ids = new Set(picked.map((q) => q.techId));
       expect(ids.size).toBe(10);
       for (const q of picked) {
         expect(q.options).toHaveLength(4);
         expect(q.options).toContain(q.answer);
-      }
-      for (const q of picked.filter((q) => q.format === "snippet-tool")) {
-        expect(q.prompt && q.prompt.length).toBeGreaterThan(5);
+        expect(q.answer).toBe(q.name);
       }
     }
   });
 
-  it("covers github/docker/kubernetes/redis and has snippet/scenario banks", () => {
+  it("covers github/docker/kubernetes/redis", () => {
     const ids = new Set(TECH_DECK.map((t) => t.id));
     for (const c of ["github", "docker", "kubernetes", "redis"] as const)
       expect(ids.has(c)).toBe(true);
-    expect(SNIPPETS.length).toBeGreaterThanOrEqual(8);
-    expect(SCENARIOS.length).toBeGreaterThanOrEqual(8);
   });
 });
 

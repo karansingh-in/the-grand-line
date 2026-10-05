@@ -22,22 +22,18 @@ export type TechId =
   | "npm"
   | "postman";
 
-export type Round1Format = "mark-name" | "name-mark" | "snippet-tool" | "scenario-tool";
-
+/** Round 1 is pure identification: see the real mark, name the tech. */
 export type Round1Q = {
   id: string;
-  format: Round1Format;
   techId: TechId;
   name: string;
   answer: string;
   diff: Difficulty;
-  /** Exactly 4 options, shuffled, containing answer. Names for text formats, techIds for mark options. */
+  /** Exactly 4 tech names, shuffled, containing answer. */
   options: string[];
-  /** Shown for snippet/scenario formats. */
-  prompt?: string;
 };
 
-/** Back-compat alias. */
+/** Back-compat aliases. */
 export type IconQ = Round1Q;
 export type PracticalQ = Round1Q;
 
@@ -92,62 +88,6 @@ function pickDistractors(techId: TechId, count: number): TechId[] {
   return [...same, ...rest].slice(0, count);
 }
 
-export const SNIPPETS: { techId: TechId; code: string }[] = [
-  { techId: "docker", code: "docker run -p 8080:80 treasure:v1" },
-  { techId: "kubernetes", code: "kubectl get pods -n grand-line" },
-  { techId: "git", code: "git rebase -i HEAD~3" },
-  { techId: "redis", code: `SET crew:straw-hats "sailing" EX 3600` },
-  { techId: "postgres", code: "SELECT * FROM crews WHERE bounty > 1000;" },
-  { techId: "terraform", code: "terraform plan -out=harbor.tfplan" },
-  { techId: "prometheus", code: "rate(http_requests_total[5m])" },
-  { techId: "npm", code: "npm ci --omit=dev" },
-  { techId: "nginx", code: "proxy_pass http://fleet:3000;" },
-  { techId: "aws", code: "aws s3 cp map.png s3://grand-line/" },
-];
-
-export const SCENARIOS: { techId: TechId; text: string }[] = [
-  {
-    techId: "kafka",
-    text: "Millions of sensor events must wait in an orderly line before workers process them. What holds the queue?",
-  },
-  {
-    techId: "mongodb",
-    text: "Player profiles with wildly different shapes and no fixed schema. Where do they live?",
-  },
-  {
-    techId: "grafana",
-    text: "The crew wants one wall of charts for every service afloat. What paints the wall?",
-  },
-  {
-    techId: "github",
-    text: "You fork the treasure map and open a pull request against the captain's copy. Where?",
-  },
-  {
-    techId: "linux",
-    text: "The deploy script refuses to run until it is blessed executable. Which command blesses it?",
-  },
-  {
-    techId: "python",
-    text: "Each quest gets an isolated sandbox so package versions never fight. Whose virtual environment is it?",
-  },
-  {
-    techId: "react",
-    text: "The chart re-renders itself the moment the crew's position state changes. Which library moves the ink?",
-  },
-  {
-    techId: "nodejs",
-    text: "JavaScript escapes the browser to serve your harbor API. What runs it on the server?",
-  },
-  {
-    techId: "postman",
-    text: "You fire a bare GET at the leaderboard API just to inspect the JSON. What did you fire it from?",
-  },
-  {
-    techId: "redis",
-    text: "Session tokens must answer in under a millisecond. What remembers them?",
-  },
-];
-
 export const FINAL_QUESTIONS = [
   {
     q: "A pirate crew stores 1024 map fragments. Each round, half the fragments are lost. After how many rounds is only 1 fragment left?",
@@ -174,11 +114,13 @@ export type HuntStop = {
   title: string;
   /** Real-world place. Placeholder until hosts fill in the venue. */
   area: string;
-  /** Three verses, revealed one at a time — cryptic first, near-explicit last. */
+  /** Three verses, always shown together — cryptic first, near-explicit last. */
   riddles: [string, string, string];
   /** Extra nudge, costs 1 of the team's 2 hints. */
   nudge: string;
 };
+
+export const TOTAL_STOPS = 7;
 
 export const HUNT_STOPS: HuntStop[] = [
   {
@@ -200,7 +142,7 @@ export const HUNT_STOPS: HuntStop[] = [
     riddles: [
       "Sailors run on more than wind. Follow the smell of victory at noon.",
       "Where tokens change hands for fuel and the queue bends like a river.",
-      "Under the menu board, beside the counter's edge — the mark hides where bills are paid.",
+      "Under the menu board, beside the counter edge — the mark hides where bills are paid.",
     ],
     nudge: "Canteen serving counter. Look beneath the menu board, near the billing corner.",
   },
@@ -221,7 +163,7 @@ export const HUNT_STOPS: HuntStop[] = [
     area: "Main entrance foyer — hosts: set the real spot.",
     riddles: [
       "Every voyage begins where all feet first land, beneath the words that name this ship.",
-      "Crews gather, notices flutter, the day's orders are pinned for all to read.",
+      "Crews gather, notices flutter, the days orders are pinned for all to read.",
       "The big notice board by the main entrance — behind the top-right corner notice.",
     ],
     nudge: "Main entrance foyer notice board. Top-right corner, behind the freshest notice.",
@@ -293,8 +235,6 @@ export type GameState = {
   r2Pos: number;
   /** Stop ids already marked found. */
   r2Found: number[];
-  /** Verses revealed per stop id (1..3). */
-  revealedVerses: Record<string, number>;
   finalQ: number;
   rev: number;
   updatedAt: number;
@@ -304,8 +244,13 @@ export type GameState = {
   revealedHints: Record<string, string>;
 };
 
-const KEY = "grandline-state-v4";
-const LEGACY_KEYS = ["grandline-state-v3", "grandline-state-v2", "grandline-state-v1"];
+const KEY = "grandline-state-v5";
+const LEGACY_KEYS = [
+  "grandline-state-v4",
+  "grandline-state-v3",
+  "grandline-state-v2",
+  "grandline-state-v1",
+];
 
 export function normalizeTeamCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "-").slice(0, 32);
@@ -314,8 +259,9 @@ export function normalizeTeamCode(raw: string): string {
 function isLegacyR1(q: unknown): boolean {
   if (!q || typeof q !== "object") return true;
   const r = q as Record<string, unknown>;
-  // v4 questions always carry a format field.
-  return !("format" in r);
+  // v5 questions are bare identification: no format, no prompt, options are names.
+  if ("format" in r || "prompt" in r || "body" in r || "title" in r || "slug" in r) return true;
+  return false;
 }
 
 function isLegacyState(s: GameState): boolean {
@@ -328,7 +274,6 @@ function isLegacyState(s: GameState): boolean {
 function withDefaults(s: GameState): GameState {
   if (typeof s.hintsLeft !== "number") s.hintsLeft = MAX_HINTS;
   if (!s.revealedHints || typeof s.revealedHints !== "object") s.revealedHints = {};
-  if (!s.revealedVerses || typeof s.revealedVerses !== "object") s.revealedVerses = {};
   if (!Array.isArray(s.r2Found)) s.r2Found = [];
   return s;
 }
@@ -376,84 +321,38 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function nameOptions(techId: TechId): [string, string, string, string] {
-  const names = [
-    TECH_BY_ID[techId]!.name,
-    ...pickDistractors(techId, 3).map((t) => TECH_BY_ID[t]!.name),
-  ];
-  return shuffle(names) as [string, string, string, string];
-}
-
-function markOptions(techId: TechId): [string, string, string, string] {
-  return shuffle([techId, ...pickDistractors(techId, 3)]) as [string, string, string, string];
-}
-
-function takeTech(diff: Difficulty, exclude: Set<TechId>): TechId {
-  const pool = shuffle(TECH_DECK.filter((t) => t.diff === diff && !exclude.has(t.id)));
-  const pick = pool[0] ?? shuffle(TECH_DECK.filter((t) => !exclude.has(t.id)))[0]!;
-  exclude.add(pick.id);
-  return pick.id;
-}
-
-function takeSnippet(exclude: Set<TechId>): { techId: TechId; code: string } {
-  const pool = shuffle(SNIPPETS.filter((s) => !exclude.has(s.techId)));
-  const pick = pool[0] ?? shuffle(SNIPPETS)[0]!;
-  exclude.add(pick.techId);
-  return pick;
-}
-
-function takeScenario(exclude: Set<TechId>): { techId: TechId; text: string } {
-  const pool = shuffle(SCENARIOS.filter((s) => !exclude.has(s.techId)));
-  const pick = pool[0] ?? shuffle(SCENARIOS)[0]!;
-  exclude.add(pick.techId);
-  return pick;
-}
-
-/**
- * 10 questions per game, harder than before:
- * 4 mark→name (easy, easy, medium, hard),
- * 2 name→mark (medium, hard),
- * 2 snippet→tool (medium, hard),
- * 2 scenario→tool (easy, medium).
- */
+/** 10 identification trials per game: 3 easy / 4 medium / 3 hard. */
 export function pickRound1(): Round1Q[] {
+  const diffs: Difficulty[] = [
+    "easy",
+    "easy",
+    "easy",
+    "medium",
+    "medium",
+    "medium",
+    "medium",
+    "hard",
+    "hard",
+    "hard",
+  ];
   const used = new Set<TechId>();
-  const qs: Round1Q[] = [];
-  const mk = (format: Round1Format, techId: TechId, extra: Partial<Round1Q> = {}): Round1Q => {
-    const name = TECH_BY_ID[techId]!.name;
-    const diff = TECH_BY_ID[techId]!.diff;
-    const textOptions = format !== "name-mark";
+  const qs = diffs.map((d) => {
+    const pool = shuffle(TECH_DECK.filter((t) => t.diff === d && !used.has(t.id)));
+    const tech = pool[0] ?? shuffle(TECH_DECK.filter((t) => !used.has(t.id)))[0]!;
+    used.add(tech.id);
+    const options = shuffle([
+      tech.name,
+      ...pickDistractors(tech.id, 3).map((t) => TECH_BY_ID[t]!.name),
+    ]);
     return {
-      id: `${format}-${techId}`,
-      format,
-      techId,
-      name,
-      answer: textOptions ? name : techId,
-      diff,
-      options: textOptions ? nameOptions(techId) : markOptions(techId),
-      ...extra,
+      id: `mark-${tech.id}`,
+      techId: tech.id,
+      name: tech.name,
+      answer: tech.name,
+      diff: tech.diff,
+      options: options as [string, string, string, string],
     };
-  };
-
-  for (const d of ["easy", "easy", "medium", "hard"] as Difficulty[]) {
-    qs.push(mk("mark-name", takeTech(d, used)));
-  }
-  for (const d of ["medium", "hard"] as Difficulty[]) {
-    qs.push(mk("name-mark", takeTech(d, used)));
-  }
-  for (const d of ["medium", "hard"] as Difficulty[]) {
-    void d;
-    const s = takeSnippet(used);
-    qs.push(mk("snippet-tool", s.techId, { prompt: s.code }));
-  }
-  for (const d of ["easy", "medium"] as Difficulty[]) {
-    void d;
-    const s = takeScenario(used);
-    const q = mk("scenario-tool", s.techId, { prompt: s.text });
-    // Scenario difficulty skews easier; mark hard-tech scenarios hard.
-    q.diff = TECH_BY_ID[s.techId]!.diff === "hard" ? "hard" : q.diff;
-    qs.push(q);
-  }
+  });
   return shuffle(qs);
 }
 
@@ -479,7 +378,6 @@ export function newGame(teamName: string, teamId: string): GameState {
     r2Order: shuffledStopOrder(),
     r2Pos: 0,
     r2Found: [],
-    revealedVerses: {},
     finalQ: Math.floor(Math.random() * FINAL_QUESTIONS.length),
     rev: 1,
     updatedAt: now,
@@ -524,5 +422,3 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 export function roman(n: number): string {
   return ROMAN[n - 1] ?? String(n);
 }
-
-export const TOTAL_STOPS = 7;
