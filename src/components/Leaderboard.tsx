@@ -34,38 +34,55 @@ export function Leaderboard({ compact = false }: { compact?: boolean }) {
   }, []);
 
   if (rows === null) {
-    return <p className="text-center text-xs text-muted-foreground tracking-widest">LOADING LEGENDS…</p>;
+    return (
+      <p className="text-center font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+        Loading legends...
+      </p>
+    );
   }
   if (!isSyncConfigured()) {
     return (
-      <div className="text-center text-xs text-muted-foreground">
-        <p className="tracking-[0.3em]">TOP CREWS</p>
-        <p className="mt-2">Connect Supabase to enable the live leaderboard.</p>
+      <div className="border border-border px-6 py-8 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+          Top crews
+        </p>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          Connect Supabase to enable the live leaderboard.
+        </p>
       </div>
     );
   }
   if (rows.length === 0) {
     return (
-      <div className="text-center">
-        <p className="text-[10px] tracking-[0.3em] text-muted-foreground">TOP CREWS</p>
-        <p className="mt-2 text-sm text-muted-foreground">No crew has claimed the One Piece yet.</p>
+      <div className="border border-border px-6 py-8 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+          Top crews
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">No crew has claimed the One Piece yet.</p>
       </div>
     );
   }
   return (
-    <div className={compact ? "" : "border border-border bg-card/40 p-4"}>
-      <p className="text-center text-[10px] tracking-[0.3em] text-muted-foreground">TOP 5 CREWS · LIVE</p>
-      <ol className="mt-3 space-y-2">
+    <div
+      className={compact ? "border-t border-border pt-6" : "border border-border bg-card/40 p-5"}
+    >
+      <p className="text-center font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+        Top 5 crews &middot; live
+      </p>
+      <ol className="mt-5 space-y-4">
         {rows.map((r, i) => (
-          <li key={r.team_code} className="flex items-center justify-between gap-3 text-sm">
-            <span className="flex items-center gap-2 truncate">
-              <span className="font-mono text-primary w-6">{i + 1}.</span>
+          <li key={r.team_code} className="flex items-baseline justify-between gap-4 text-sm">
+            <span className="flex min-w-0 items-baseline gap-2">
+              <span className="font-mono text-xs text-primary tabular-nums">
+                {String(i + 1).padStart(2, "0")}
+              </span>
               <span className="truncate font-medium">{r.team_name}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">· {r.team_code}</span>
             </span>
-            <span className="font-mono tabular-nums text-primary whitespace-nowrap">
+            <span className="shrink-0 font-mono tabular-nums text-foreground">
               {fmtTime(r.final_time_sec)}
-              <span className="ml-2 text-[10px] text-muted-foreground">+{r.penalty_sec}s · {fmtClock(r.updated_at)}</span>
+              <span className="ml-2 text-[10px] text-muted-foreground">
+                +{r.penalty_sec}s &middot; {fmtClock(r.updated_at)}
+              </span>
             </span>
           </li>
         ))}
