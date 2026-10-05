@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   type GameState,
-  type Round1Q,
-  type TechId,
   loadState,
   saveState,
   resetState,
@@ -19,7 +17,7 @@ import {
   normalizeTeamCode,
   withRev,
   spendHint,
-  TECH_BY_ID,
+  type TechId,
 } from "@/lib/game";
 import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
 import { Shell } from "@/components/GameShell";
@@ -184,6 +182,8 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
   );
 }
 
+const TEASER: TechId[] = ["docker", "kubernetes", "python", "react"];
+
 function Landing({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="flex flex-col items-center py-10 text-center">
@@ -202,7 +202,20 @@ function Landing({ onEnter }: { onEnter: () => void }) {
           <br />
           Hunt
         </h1>
-        <ChartRule className="mx-auto mt-10 max-w-[220px]" />
+        <div className="mx-auto mt-8 flex max-w-[300px] items-center justify-center gap-3">
+          {TEASER.map((t) => (
+            <span
+              key={t}
+              className="flex h-14 w-14 items-center justify-center bg-parchment shadow-xl"
+            >
+              <TechMark id={t} size={34} />
+            </span>
+          ))}
+        </div>
+        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          Know your vessels
+        </p>
+        <ChartRule className="mx-auto mt-8 max-w-[220px]" />
         <div className="mt-8 space-y-1.5 text-[15px] text-muted-foreground">
           <p>Ten trials of craft. Seven shores on foot.</p>
           <p>One crew, one clock, two lifelines.</p>
@@ -306,23 +319,38 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
   );
 }
 
-const FORMAT_LABEL: Record<Round1Q["format"], string> = {
-  "mark-name": "Name the mark",
-  "name-mark": "Find the mark",
-  "snippet-tool": "Read the runes",
-  "scenario-tool": "Choose the vessel",
-};
-
-function MarkStage({ techId, flash }: { techId: TechId; flash: number }) {
+function Specimen({
+  techId,
+  index,
+  total,
+  diff,
+  flash,
+}: {
+  techId: TechId;
+  index: number;
+  total: number;
+  diff: string;
+  flash: number;
+}) {
   return (
-    <div className="chart-corners relative mx-auto flex h-60 w-60 items-center justify-center border border-border bg-card text-primary">
-      <TechMark id={techId} size={132} />
-      {flash > 0 && (
-        <span key={flash} className="absolute right-3 top-3 font-mono text-sm text-accent">
-          +10s
+    <figure className="mx-auto w-full max-w-[300px]">
+      <div className="chart-corners relative flex h-64 items-center justify-center bg-parchment shadow-2xl">
+        <TechMark id={techId} size={148} />
+        {flash > 0 && (
+          <span key={flash} className="absolute right-4 top-4 font-mono text-sm text-accent">
+            +10s
+          </span>
+        )}
+      </div>
+      <figcaption className="mt-3 flex items-baseline justify-between border-b border-border pb-3">
+        <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          Exhibit Nº {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
         </span>
-      )}
-    </div>
+        <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
+          {diff}
+        </span>
+      </figcaption>
+    </figure>
   );
 }
 
@@ -339,6 +367,11 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.startTs]);
+
+  useEffect(() => {
+    setWrongPick(null);
+    setRightPick(null);
+  }, [s.r1Index]);
 
   const next = (g: GameState, pen: number): GameState => {
     const last = g.r1Index >= g.r1Questions.length - 1;
@@ -378,11 +411,6 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
     update((g) => ({ ...next(g, 10), r1Skips: g.r1Skips + 1 }));
   };
 
-  useEffect(() => {
-    setWrongPick(null);
-    setRightPick(null);
-  }, [s.r1Index]);
-
   const stateOf = (o: string): "idle" | "wrong" | "right" | "dim" => {
     if (rightPick) return o === rightPick ? "right" : "dim";
     if (wrongPick === o) return "wrong";
@@ -392,95 +420,28 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
   return (
     <div key={s.r1Index} className="mx-auto w-full max-w-[400px] py-4">
       <ChapterHead
-        kicker={`Chapter one &middot; ${FORMAT_LABEL[q.format]} &middot; ${q.diff}`}
+        kicker="Chapter one &middot; name the mark"
         numeral={`${s.r1Index + 1} / ${s.r1Questions.length}`}
-        title={
-          q.format === "mark-name" ? (
-            <>Which tool bears this mark?</>
-          ) : q.format === "name-mark" ? (
-            <>Which mark belongs to {q.name}?</>
-          ) : q.format === "snippet-tool" ? (
-            <>Whose handwriting is this?</>
-          ) : (
-            <>Which vessel for this voyage?</>
-          )
-        }
+        title={<>Which tool bears this mark?</>}
       />
       <div className="mt-4">
         <Progress value={s.r1Index} max={s.r1Questions.length} />
       </div>
 
       <div className="py-8">
-        {q.format === "mark-name" && <MarkStage techId={q.techId} flash={flash} />}
-        {q.format === "name-mark" && (
-          <div className="chart-corners relative border border-border bg-card px-6 py-8 text-center">
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Find the mark of
-            </p>
-            <p className="mt-2 font-display text-4xl text-primary">{q.name}</p>
-            {flash > 0 && (
-              <span key={flash} className="absolute right-3 top-3 font-mono text-sm text-accent">
-                +10s
-              </span>
-            )}
-          </div>
-        )}
-        {(q.format === "snippet-tool" || q.format === "scenario-tool") && (
-          <div className="relative border border-border bg-card">
-            <div className="border-b border-border px-5 py-2">
-              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                {q.format === "snippet-tool" ? "Exhibit A" : "The situation"}
-              </p>
-            </div>
-            {q.format === "snippet-tool" ? (
-              <pre className="overflow-x-auto bg-ink px-5 py-4 font-mono text-[15px] leading-7 text-parchment">
-                {q.prompt}
-              </pre>
-            ) : (
-              <p className="px-5 py-5 text-[16px] leading-8">{q.prompt}</p>
-            )}
-            {flash > 0 && (
-              <span key={flash} className="absolute right-3 top-10 font-mono text-sm text-accent">
-                +10s
-              </span>
-            )}
-          </div>
-        )}
+        <Specimen
+          techId={q.techId}
+          index={s.r1Index}
+          total={s.r1Questions.length}
+          diff={q.diff}
+          flash={flash}
+        />
       </div>
 
-      {q.format === "name-mark" ? (
-        <div className="grid grid-cols-2 gap-3">
-          {q.options.map((o) => {
-            const st = stateOf(o);
-            return (
-              <button
-                key={o}
-                onClick={() => choose(o)}
-                disabled={st === "wrong" || !!rightPick}
-                aria-label={TECH_BY_ID[o as TechId]?.name ?? o}
-                className={`flex min-h-28 flex-col items-center justify-center gap-2 border px-3 py-4 transition active:scale-[0.98] ${
-                  st === "idle"
-                    ? "border-border bg-card text-primary hover:border-primary"
-                    : st === "right"
-                      ? "border-primary text-primary"
-                      : st === "wrong"
-                        ? "border-destructive/60 opacity-40"
-                        : "border-border opacity-40"
-                }`}
-              >
-                <TechMark id={o as TechId} size={52} />
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  {TECH_BY_ID[o as TechId]?.name ?? o}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {q.options.map((o, i) => (
+      <div className="space-y-3">
+        {q.options.map((o, i) => (
+          <div key={o} className="fade-up" style={{ animationDelay: `${i * 60}ms` }}>
             <OptionRow
-              key={o}
               index={i}
               state={stateOf(o)}
               disabled={stateOf(o) !== "idle"}
@@ -488,9 +449,9 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
             >
               {o}
             </OptionRow>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
 
       <div className="mt-8">
         <GhostButton onClick={skip} disabled={s.r1Skips >= 2 || !!rightPick}>
@@ -559,18 +520,9 @@ function ShoreDots({ found, total }: { found: number; total: number }) {
 function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
   const stopId = s.r2Order[s.r2Pos % s.r2Order.length]!;
   const stop = getStopById(stopId);
-  const verses = Math.min(3, Math.max(1, s.revealedVerses[String(stopId)] ?? 1));
   const hintKey = hintKeyForStop(stopId);
   const revealedHint = s.revealedHints[hintKey];
   const foundCount = s.r2Found.length;
-
-  const revealVerse = () => {
-    if (verses >= 3) return;
-    update((g) => ({
-      ...g,
-      revealedVerses: { ...g.revealedVerses, [String(stopId)]: verses + 1 },
-    }));
-  };
 
   const spendStopHint = () => {
     const { next, ok } = spendHint(s, hintKey, getStopHint(stopId));
@@ -608,35 +560,22 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         </p>
       </div>
 
+      <div className="mt-6 space-y-4">
+        {stop.riddles.map((v, i) => (
+          <VerseCard key={`${stopId}-${i}`} index={i + 1} total={3}>
+            {v}
+          </VerseCard>
+        ))}
+      </div>
+
       <div className="mt-6 flex items-center justify-between border-y border-border py-3">
         <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
           Chart notes
         </span>
         <HintPips left={s.hintsLeft} />
       </div>
-      <p className="mt-3 text-[13px] leading-6 text-muted-foreground">
-        Two notes for the whole expedition, spendable on any shore. Verses below are always free.
-      </p>
 
-      <div className="mt-6 space-y-4">
-        {stop.riddles.slice(0, verses).map((v, i) => (
-          <VerseCard key={`${stopId}-${i}`} index={i + 1} total={3} fresh={i === verses - 1}>
-            {v}
-          </VerseCard>
-        ))}
-      </div>
-
-      {verses < 3 ? (
-        <div className="mt-4">
-          <GhostButton onClick={revealVerse}>Reveal the next verse</GhostButton>
-        </div>
-      ) : (
-        <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-          The chart is fully unrolled
-        </p>
-      )}
-
-      <div className="mt-6">
+      <div className="mt-4">
         {revealedHint ? (
           <Card className="border-primary/50 p-5">
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
@@ -650,7 +589,7 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
             onConfirm={spendStopHint}
             disabled={s.hintsLeft <= 0}
           >
-            Spend a chart note ({s.hintsLeft} left)
+            Spend a chart note ({s.hintsLeft} of 2 left)
           </ConfirmButton>
         )}
       </div>
@@ -753,7 +692,7 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
           incl. {s.penaltySec}s penalties &middot; {s.teamName} ({s.teamId})
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Solved {s.r1Questions.length} trials &middot; {s.r2Found.length}/{TOTAL_STOPS} shores
+          Named {s.r1Questions.length} marks &middot; {s.r2Found.length}/{TOTAL_STOPS} shores
           claimed
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -823,7 +762,7 @@ export function Game() {
                 the Grand Line.
               </>
             }
-            sub="Seven shores ahead, each hiding behind three verses. Walk them all."
+            sub="Seven shores ahead, three verses each. Walk them all."
             action="Begin the walk"
             onAction={() => update((g) => ({ ...g, phase: "r2intro" }))}
           />
@@ -841,7 +780,7 @@ export function Game() {
               </>
             }
             sub="Your route is yours alone — no two crews walk the same order. Claim all seven to face the final reckoning."
-            action="Unroll the first verse"
+            action="Unroll the first chart"
             onAction={() => update((g) => ({ ...g, phase: "r2" }))}
           />
         );
