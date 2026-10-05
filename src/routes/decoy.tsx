@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Shell } from "@/components/GameShell";
 
 export const Route = createFileRoute("/decoy")({
-  head: () => ({ meta: [{ title: "Retired Chart — The Grand Line" }] }),
+  head: () => ({ meta: [{ title: "Retired Chart — Hack the Hunt" }] }),
   component: () => (
     <Shell>
       <div className="mx-auto max-w-[320px] py-16 text-center">

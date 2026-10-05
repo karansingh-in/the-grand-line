@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Shell } from "@/components/GameShell";
 
 export const Route = createFileRoute("/final")({
-  head: () => ({ meta: [{ title: "The Final Reckoning — The Grand Line" }] }),
+  head: () => ({ meta: [{ title: "The Final Reckoning — Hack the Hunt" }] }),
   component: () => (
     <Shell>
       <div className="mx-auto max-w-[320px] py-16 text-center">

@@ -1,4 +1,6 @@
-# The Grand Line — Technical Treasure Hunt
+# Hack the Hunt
+
+Organized by SHAIDS.
 
 A mobile-first companion web app for a physical college treasure hunt.
 Teams sail through two chapters on one continuous clock — ten trials of
