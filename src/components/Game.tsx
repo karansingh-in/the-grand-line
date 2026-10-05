@@ -33,7 +33,6 @@ import {
   ChapterHead,
   ChartRule,
   OptionRow,
-  OptionGroup,
   VerseCard,
   ConfirmButton,
   Progress,
@@ -156,7 +155,7 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-xl backdrop-saturate-150">
+    <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
@@ -207,7 +206,7 @@ function Landing({ onEnter }: { onEnter: () => void }) {
           {TEASER.map((t) => (
             <span
               key={t}
-              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-parchment shadow-xl"
+              className="flex h-14 w-14 items-center justify-center bg-parchment shadow-xl"
             >
               <TechMark id={t} size={34} />
             </span>
@@ -335,7 +334,7 @@ function Specimen({
 }) {
   return (
     <figure className="mx-auto w-full max-w-[300px]">
-      <div className="relative flex h-64 items-center justify-center rounded-[24px] bg-parchment shadow-[0_24px_60px_-24px_rgb(0_0_0/0.65)]">
+      <div className="chart-corners relative flex h-64 items-center justify-center bg-parchment shadow-2xl">
         <TechMark id={techId} size={148} />
         {flash > 0 && (
           <span key={flash} className="absolute right-4 top-4 font-mono text-sm text-accent">
@@ -439,19 +438,20 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         />
       </div>
 
-      <OptionGroup>
+      <div className="space-y-3">
         {q.options.map((o, i) => (
-          <OptionRow
-            key={o}
-            index={i}
-            state={stateOf(o)}
-            disabled={stateOf(o) !== "idle"}
-            onClick={() => choose(o)}
-          >
-            {o}
-          </OptionRow>
+          <div key={o} className="fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+            <OptionRow
+              index={i}
+              state={stateOf(o)}
+              disabled={stateOf(o) !== "idle"}
+              onClick={() => choose(o)}
+            >
+              {o}
+            </OptionRow>
+          </div>
         ))}
-      </OptionGroup>
+      </div>
 
       <div className="mt-8">
         <GhostButton onClick={skip} disabled={s.r1Skips >= 2 || !!rightPick}>
