@@ -40,13 +40,16 @@ describe("Round 1 identification bank", () => {
     }
   });
 
-  it("covers github/docker/kubernetes/redis", () => {
+  it("covers tech, AI trio and newcomers", () => {
     const ids = new Set(TECH_DECK.map((t) => t.id));
     for (const c of [
       "github",
       "docker",
       "kubernetes",
-      "redis",
+      "adobe",
+      "spacex",
+      "antigravity",
+      "gemini",
       "claude",
       "openai",
       "perplexity",

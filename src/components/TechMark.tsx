@@ -5,7 +5,7 @@ import github from "@/assets/tech/github.svg?raw";
 import git from "@/assets/tech/git.svg?raw";
 import docker from "@/assets/tech/docker.svg?raw";
 import kubernetes from "@/assets/tech/kubernetes.svg?raw";
-import redis from "@/assets/tech/redis.svg?raw";
+import adobe from "@/assets/tech/adobe.svg?raw";
 import postgres from "@/assets/tech/postgres.svg?raw";
 import mongodb from "@/assets/tech/mongodb.svg?raw";
 import antigravity from "@/assets/tech/antigravity.svg?raw";
@@ -20,14 +20,14 @@ import gemini from "@/assets/tech/gemini.svg?raw";
 import aws from "@/assets/tech/aws.svg?raw";
 import vscode from "@/assets/tech/vscode.svg?raw";
 import npm from "@/assets/tech/npm.svg?raw";
-import postman from "@/assets/tech/postman.svg?raw";
+import spacex from "@/assets/tech/spacex.svg?raw";
 
 const MARKS: Record<TechId, string> = {
   github,
   git,
   docker,
   kubernetes,
-  redis,
+  adobe,
   postgres,
   mongodb,
   antigravity,
@@ -42,7 +42,7 @@ const MARKS: Record<TechId, string> = {
   aws,
   vscode,
   npm,
-  postman,
+  spacex,
 };
 
 /** Real brand mark, rendered monochrome via CSS for a consistent look. */
