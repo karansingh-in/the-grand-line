@@ -240,6 +240,10 @@
   animation: float-slow 5s ease-in-out infinite;
 }
 
+.font-tech {
+  font-family: "Space Grotesk", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  letter-spacing: 0.01em;
+}
 .typed-caret::after {
   content: "";
   display: inline-block;
