@@ -1,7 +1,7 @@
 // Multi-device team sync via Supabase `teams` table.
 // Falls back to local-only mode when Supabase is unavailable.
 import type { GameState } from "@/lib/game";
-import { elapsedSec } from "@/lib/game";
+import { elapsedSec, isCompatibleState } from "@/lib/game";
 
 export type TeamRow = {
   team_code: string;
@@ -17,12 +17,16 @@ function getEnv(name: string): string | undefined {
   try {
     const v = import.meta?.env?.[name] as string | undefined;
     if (v) return v;
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = (globalThis as any)?.process?.env?.[name] as string | undefined;
     if (p) return p;
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
   return undefined;
 }
 
@@ -55,9 +59,11 @@ export async function pushTeam(s: GameState): Promise<boolean> {
   const sb = await getSupabase();
   if (!sb) return false;
   try {
-    const { error } = await (sb as never as {
-      from: (t: string) => { upsert: (r: unknown) => Promise<{ error: unknown }> };
-    })
+    const { error } = await (
+      sb as never as {
+        from: (t: string) => { upsert: (r: unknown) => Promise<{ error: unknown }> };
+      }
+    )
       .from("teams")
       .upsert(toRow(s));
     return !error;
@@ -70,21 +76,29 @@ export async function fetchTeam(teamCode: string): Promise<GameState | null> {
   const sb = await getSupabase();
   if (!sb) return null;
   try {
-    const { data, error } = await (sb as never as {
-      from: (t: string) => {
-        select: (c: string) => {
-          eq: (col: string, v: string) => {
-            maybeSingle: () => Promise<{ data: TeamRow | null; error: unknown }>;
+    const { data, error } = await (
+      sb as never as {
+        from: (t: string) => {
+          select: (c: string) => {
+            eq: (
+              col: string,
+              v: string,
+            ) => {
+              maybeSingle: () => Promise<{ data: TeamRow | null; error: unknown }>;
+            };
           };
         };
-      };
-    })
+      }
+    )
       .from("teams")
       .select("state")
       .eq("team_code", teamCode)
       .maybeSingle();
     if (error || !data?.state) return null;
-    return data.state as GameState;
+    const state = data.state as GameState;
+    // Never hand a stale-version row to the render tree (white screen). Callers
+    // treat incompatible rows as absent and start fresh instead.
+    return isCompatibleState(state) ? state : null;
   } catch {
     return null;
   }
@@ -102,17 +116,25 @@ export async function fetchLeaderboard(limit = 5): Promise<LeaderboardEntry[]> {
   const sb = await getSupabase();
   if (!sb) return [];
   try {
-    const { data, error } = await (sb as never as {
-      from: (t: string) => {
-        select: (c: string) => {
-          eq: (col: string, v: string) => {
-            order: (col: string, o: unknown) => {
-              limit: (n: number) => Promise<{ data: LeaderboardEntry[] | null; error: unknown }>;
+    const { data, error } = await (
+      sb as never as {
+        from: (t: string) => {
+          select: (c: string) => {
+            eq: (
+              col: string,
+              v: string,
+            ) => {
+              order: (
+                col: string,
+                o: unknown,
+              ) => {
+                limit: (n: number) => Promise<{ data: LeaderboardEntry[] | null; error: unknown }>;
+              };
             };
           };
         };
-      };
-    })
+      }
+    )
       .from("teams")
       .select("team_code,team_name,final_time_sec,penalty_sec,updated_at")
       .eq("phase", "complete")
@@ -132,14 +154,20 @@ export async function subscribeTeam(
   const sb = await getSupabase();
   if (!sb) return () => undefined;
   try {
-    const channel = (sb as never as {
-      channel: (n: string) => {
-        on: (ev: string, f: unknown, cb: (p: { new: TeamRow }) => void) => { subscribe: () => void };
-        subscribe: () => void;
-        unsubscribe: () => void;
-      };
-      removeChannel: (c: unknown) => void;
-    }).channel(`team-${teamCode}`);
+    const channel = (
+      sb as never as {
+        channel: (n: string) => {
+          on: (
+            ev: string,
+            f: unknown,
+            cb: (p: { new: TeamRow }) => void,
+          ) => { subscribe: () => void };
+          subscribe: () => void;
+          unsubscribe: () => void;
+        };
+        removeChannel: (c: unknown) => void;
+      }
+    ).channel(`team-${teamCode}`);
     const ch = channel.on(
       "postgres_changes",
       { event: "*", schema: "public", table: "teams", filter: `team_code=eq.${teamCode}` },
@@ -162,7 +190,9 @@ export async function subscribeTeam(
       clearTimeout(t);
       try {
         (sb as never as { removeChannel: (c: unknown) => void }).removeChannel(ch);
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     };
   } catch {
     return () => undefined;

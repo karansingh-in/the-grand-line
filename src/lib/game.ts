@@ -274,6 +274,34 @@ function isLegacyState(s: GameState): boolean {
   return false;
 }
 
+const PHASES = ["team", "r1", "r1done", "r2intro", "r2", "final", "complete"] as const;
+
+/**
+ * Rejects rows saved by older app versions (or corrupt payloads) before they
+ * can reach the render tree. Stale Supabase rows are the classic white screen:
+ * Round 2 reads r2Verses/r2Order off whatever the server hands over.
+ */
+export function isCompatibleState(s: unknown): s is GameState {
+  if (!s || typeof s !== "object") return false;
+  const g = s as Record<string, unknown>;
+  if (typeof g["teamCode"] !== "string" || (g["teamCode"] as string).length === 0) return false;
+  if (
+    typeof g["phase"] !== "string" ||
+    !(PHASES as readonly string[]).includes(g["phase"] as string)
+  )
+    return false;
+  if (!Array.isArray(g["r1Questions"]) || (g["r1Questions"] as unknown[]).length === 0)
+    return false;
+  if (isLegacyR1((g["r1Questions"] as unknown[])[0])) return false;
+  if (!Array.isArray(g["r2Order"]) || (g["r2Order"] as unknown[]).length !== TOTAL_STOPS)
+    return false;
+  if (!g["r2Verses"] || typeof g["r2Verses"] !== "object") return false;
+  if (!Array.isArray(g["r2Found"])) return false;
+  if (typeof g["hintsLeft"] !== "number") return false;
+  if (!g["revealedHints"] || typeof g["revealedHints"] !== "object") return false;
+  return true;
+}
+
 function withDefaults(s: GameState): GameState {
   if (typeof s.hintsLeft !== "number") s.hintsLeft = MAX_HINTS;
   if (!s.revealedHints || typeof s.revealedHints !== "object") s.revealedHints = {};

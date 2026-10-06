@@ -15,6 +15,7 @@ import {
   normalizeTeamCode,
   withRev,
   spendHint,
+  isCompatibleState,
   type TechId,
 } from "@/lib/game";
 import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
@@ -152,7 +153,7 @@ function useGame() {
     let cancel = false;
     let unsub: (() => void) | undefined;
     subscribeTeam(s.teamCode, (remote) => {
-      if (cancel) return;
+      if (cancel || !isCompatibleState(remote)) return;
       setS((cur) => {
         if (!cur) return cur;
         if (cur.teamCode !== remote.teamCode) return cur;

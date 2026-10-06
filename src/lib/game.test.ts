@@ -14,6 +14,7 @@ import {
   spendHint,
   hintKeyForStop,
   getStopHint,
+  isCompatibleState,
   roman,
 } from "@/lib/game";
 
@@ -113,6 +114,32 @@ describe("physical round 2: seven shores, shuffled per crew", () => {
 
   it("roman numerals for charts", () => {
     expect([roman(1), roman(2), roman(7)]).toEqual(["I", "II", "VII"]);
+  });
+});
+
+describe("remote state compatibility gate", () => {
+  it("accepts fresh games", () => {
+    expect(isCompatibleState(newGame("Crew", "CODE-1"))).toBe(true);
+  });
+
+  it("rejects stale shapes that used to white-screen the render tree", () => {
+    const fresh = newGame("Crew", "CODE-1");
+    expect(isCompatibleState(null)).toBe(false);
+    expect(isCompatibleState({})).toBe(false);
+    expect(isCompatibleState({ ...fresh, phase: "mystery" })).toBe(false);
+    // v4 icon-format questions
+    expect(
+      isCompatibleState({
+        ...fresh,
+        r1Questions: [{ ...fresh.r1Questions[0], format: "mark-name" }],
+      }),
+    ).toBe(false);
+    // missing dealt verses / route / found list / hints
+    const { r2Verses: _v, ...noVerses } = fresh;
+    expect(isCompatibleState(noVerses)).toBe(false);
+    expect(isCompatibleState({ ...fresh, r2Order: [1, 2, 3] })).toBe(false);
+    expect(isCompatibleState({ ...fresh, r2Found: null })).toBe(false);
+    expect(isCompatibleState({ ...fresh, hintsLeft: "2" })).toBe(false);
   });
 });
 
