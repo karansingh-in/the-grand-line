@@ -15,6 +15,7 @@ import {
   normalizeTeamCode,
   withRev,
   spendHint,
+  isCompatibleState,
   type TechId,
 } from "@/lib/game";
 import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
@@ -152,7 +153,7 @@ function useGame() {
     let cancel = false;
     let unsub: (() => void) | undefined;
     subscribeTeam(s.teamCode, (remote) => {
-      if (cancel) return;
+      if (cancel || !isCompatibleState(remote)) return;
       setS((cur) => {
         if (!cur) return cur;
         if (cur.teamCode !== remote.teamCode) return cur;
@@ -317,7 +318,12 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
         if (!name.trim() || !id.trim() || status !== "idle") return;
         setStatus("checking");
         const code = normalizeTeamCode(id);
-        const remote = await fetchTeam(code);
+        // Never trap the crew on this screen: a slow venue network falls back
+        // to a fresh local game after 8s instead of hanging on "checking".
+        const remote = await Promise.race([
+          fetchTeam(code),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        ]);
         if (remote) {
           setJoinMsg(`Welcome back, ${remote.teamName}. Syncing crew progress...`);
           setStatus("sailing");
