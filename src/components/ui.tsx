@@ -18,7 +18,7 @@ export function Title({ children, className }: { children: ReactNode; className?
   return (
     <h2
       className={cn(
-        "font-display text-[34px] leading-[1.05] tracking-wide text-foreground sm:text-5xl",
+        "font-display text-[38px] leading-[1.02] tracking-wide text-foreground sm:text-6xl",
         className,
       )}
     >
@@ -40,9 +40,9 @@ export function PrimaryButton({
     <button
       {...rest}
       className={cn(
-        "w-full min-h-14 px-6 font-display text-[13px] uppercase tracking-[0.18em]",
-        "bg-primary text-primary-foreground",
-        "hover:brightness-110 active:scale-[0.98] transition",
+        "w-full min-h-14 px-6 font-display text-sm uppercase tracking-[0.18em] rounded-none border-2 border-primary",
+        "bg-primary text-primary-foreground hard-shadow-sm",
+        "hover:brightness-110 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all",
         "disabled:opacity-40 disabled:pointer-events-none",
         className,
       )}
@@ -61,9 +61,9 @@ export function GhostButton({
     <button
       {...rest}
       className={cn(
-        "w-full min-h-12 px-6 font-display text-[11px] uppercase tracking-[0.2em]",
-        "border border-border text-muted-foreground",
-        "hover:text-foreground hover:border-primary transition",
+        "w-full min-h-12 px-6 font-display text-[11px] uppercase tracking-[0.2em] rounded-none border-2",
+        "border-border bg-card/60 text-foreground hard-shadow-sm",
+        "hover:border-primary hover:text-primary active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all",
         "disabled:opacity-30 disabled:pointer-events-none",
         className,
       )}
@@ -74,7 +74,9 @@ export function GhostButton({
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("border border-border bg-card", className)}>{children}</div>;
+  return (
+    <div className={cn("border-2 border-border bg-card hard-shadow", className)}>{children}</div>
+  );
 }
 
 export function Hairline({ className }: { className?: string }) {
@@ -118,12 +120,15 @@ export function ChapterHead({
           {kicker}
         </p>
         {numeral && (
-          <span className="font-display text-sm tracking-[0.3em] text-primary" aria-hidden>
+          <span
+            className="tilt-r inline-block border-2 border-primary bg-ink px-2 py-0.5 font-display text-sm tracking-[0.2em] text-primary"
+            aria-hidden
+          >
             {numeral}
           </span>
         )}
       </div>
-      <h2 className="mt-3 font-display text-[32px] leading-[1.08] text-foreground sm:text-4xl">
+      <h2 className="mt-4 font-display text-4xl leading-[1.05] text-foreground sm:text-5xl">
         {title}
       </h2>
     </div>
@@ -155,22 +160,25 @@ export function OptionRow({
     <button
       {...rest}
       className={cn(
-        "group flex min-h-16 w-full items-center gap-4 border px-4 py-3 text-left transition active:scale-[0.99]",
-        state === "idle" && "border-border bg-card hover:border-primary",
-        state === "wrong" && "border-destructive/60 opacity-45",
-        state === "right" && "border-primary",
+        "group flex min-h-[68px] w-full items-center gap-4 rounded-none border-2 px-4 py-3 text-left transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        state === "idle" &&
+          "border-border bg-card hard-shadow-sm hover:border-primary hover:bg-primary/10",
+        state === "wrong" && "border-destructive/70 opacity-50",
+        state === "right" && "border-primary bg-primary text-primary-foreground hard-shadow-sm",
         state === "dim" && "border-border opacity-50",
       )}
     >
       <span
         className={cn(
-          "font-mono text-xs tabular-nums",
-          state === "idle" ? "text-primary" : "text-muted-foreground",
+          "border px-1.5 py-0.5 font-mono text-xs tabular-nums",
+          state === "right"
+            ? "border-primary-foreground/60 text-primary-foreground"
+            : "border-primary/60 text-primary",
         )}
       >
         {String(index + 1).padStart(2, "0")}
       </span>
-      <span className="flex-1 text-[15px] font-medium leading-6">{children}</span>
+      <span className="flex-1 text-base font-semibold leading-6">{children}</span>
     </button>
   );
 }
@@ -188,12 +196,69 @@ export function VerseCard({
   fresh?: boolean;
 }) {
   return (
-    <div className={cn("bg-parchment p-5 text-ink shadow-2xl", fresh && "ink-reveal")}>
-      <p className="font-mono text-[10px] uppercase tracking-[0.28em] opacity-60">
-        Verse {index} of {total}
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-none border-2 border-primary/70 bg-ink p-6 hard-shadow",
+        fresh && "ink-reveal",
+      )}
+    >
+      <div className="scanlines pointer-events-none absolute inset-0" aria-hidden />
+      <p className="relative font-mono text-[10px] uppercase tracking-[0.28em] text-primary">
+        <span
+          className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-primary"
+          aria-hidden
+        />
+        Incoming transmission &middot; verse {index} of {total}
       </p>
-      <p className="mt-2 font-display text-[19px] leading-8">{children}</p>
+      <p className="relative mt-3 font-mono text-[16px] leading-8 text-parchment">{children}</p>
     </div>
+  );
+}
+
+/** Scrolling marquee ticker for headers. */
+export function Ticker({ items, className }: { items: string[]; className?: string }) {
+  const row = [...items, ...items];
+  return (
+    <div
+      className={cn("overflow-hidden border-y-2 border-primary bg-ink py-2", className)}
+      aria-hidden
+    >
+      <div className="marquee-track flex w-max">
+        {row.map((s, i) => (
+          <span
+            key={i}
+            className="mx-6 font-mono text-[11px] uppercase tracking-[0.3em] text-primary"
+          >
+            {s} <span className="ml-12 text-hot">◆</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Chunky stat chip. */
+export function Chip({
+  children,
+  tone = "plain",
+  className,
+}: {
+  children: ReactNode;
+  tone?: "plain" | "hot" | "neon";
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-block -rotate-1 border-2 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] hard-shadow-sm",
+        tone === "plain" && "border-primary bg-ink text-primary",
+        tone === "hot" && "border-hot bg-ink text-hot",
+        tone === "neon" && "border-neon bg-ink text-neon",
+        className,
+      )}
+    >
+      {children}
+    </span>
   );
 }
 

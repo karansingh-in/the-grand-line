@@ -10,7 +10,7 @@ export const Route = createFileRoute("/decoy")({
           Retired chart
         </p>
         <h2 className="mt-4 font-display text-4xl leading-tight">The hunt walks now.</h2>
-        <div className="mx-auto mt-8 h-px w-16 bg-primary/60" />
+        <div className="hazard mx-auto mt-8 h-3 w-40" aria-hidden />
         <p className="mt-8 text-sm leading-6 text-muted-foreground">
           Decoys are gone with the QR hunt. Return to your crew screen to walk the seven shores.
         </p>
