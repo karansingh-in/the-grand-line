@@ -4,9 +4,8 @@ Organized by SHAIDS.
 
 A mobile-first companion web app for a physical college treasure hunt.
 Teams sail through two chapters on one continuous clock — ten trials of
-craft (name the tool from its real mark), then a walking chart: seven
-shores across campus, every crew dealt a different route and a single
-random verse per shore.
+craft (name the tool from its real mark), then a walking chart: one shore
+on foot with a single random verse, then straight to the final.
 
 ## Run locally
 
@@ -29,11 +28,11 @@ runs in local-only mode.
 
 ## Round 2 — hosts, read this
 
-Seven stops live in `src/lib/game.ts` (`HUNT_STOPS`). Each has a title, an
+Seven candidate shores live in `src/lib/game.ts` (`HUNT_STOPS`) — each crew is dealt one at random. Each has a title, an
 `area` (the real place), three `riddles` (cryptic first, near-explicit
 last — each crew is dealt one at random), and a `nudge` (costs the team 1 of its 2 chart notes). Replace the
-placeholder areas/riddles with your venue before the event. Every crew is
-dealt all seven stops in a shuffled order, so routes differ per team.
+placeholder areas/riddles with your venue before the event. Each crew
+is dealt a single random shore and verse, so routes differ per team.
 
 No QR codes, no scanning — the round is entirely on foot. Old
 `/fragment`, `/decoy`, and `/final` links now show a retired notice and

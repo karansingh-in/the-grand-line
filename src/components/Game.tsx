@@ -7,8 +7,6 @@ import {
   newGame,
   elapsedSec,
   fmtTime,
-  roman,
-  TOTAL_STOPS,
   HUNT_STOPS,
   getStopById,
   getStopHint,
@@ -501,29 +499,12 @@ function Center({
   );
 }
 
-function ShoreDots({ found, total }: { found: number; total: number }) {
-  return (
-    <div
-      className="flex items-center justify-center gap-2.5"
-      aria-label={`${found} of ${total} shores found`}
-    >
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className={`h-2.5 w-2.5 rotate-45 border ${i < found ? "bg-primary border-primary" : "border-border"}`}
-        />
-      ))}
-    </div>
-  );
-}
-
 function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
-  const stopId = s.r2Order[s.r2Pos % s.r2Order.length]!;
+  const stopId = s.r2Order[0]!;
   const stop = getStopById(stopId);
   const verseIdx = Math.min(2, Math.max(0, s.r2Verses[String(stopId)] ?? 0));
   const hintKey = hintKeyForStop(stopId);
   const revealedHint = s.revealedHints[hintKey];
-  const foundCount = s.r2Found.length;
 
   const spendStopHint = () => {
     const { next, ok } = spendHint(s, hintKey, getStopHint(stopId));
@@ -531,33 +512,28 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
     update(() => ({ ...next, rev: next.rev }));
   };
 
-  const claimShore = () => {
+  const goFinal = () => {
     update((g) => {
-      const cur = g.r2Order[g.r2Pos % g.r2Order.length]!;
-      if (g.r2Found.includes(cur)) return { ...g };
-      const found = [...g.r2Found, cur];
-      const done = found.length >= TOTAL_STOPS;
+      const cur = g.r2Order[0]!;
       return {
         ...g,
-        r2Found: found,
-        r2Pos: done ? g.r2Pos : g.r2Pos + 1,
-        phase: done ? "final" : "r2",
+        r2Found: g.r2Found.includes(cur) ? g.r2Found : [...g.r2Found, cur],
+        phase: "final",
       };
     });
   };
 
   return (
-    <div key={`${stopId}-${s.r2Pos}`} className="mx-auto w-full max-w-[400px] py-4">
+    <div key={stopId} className="mx-auto w-full max-w-[400px] py-4">
       <ChapterHead
         kicker="Chapter two &middot; the walking chart"
-        numeral={`${roman(s.r2Pos + 1)} / VII`}
+        numeral="I / I"
         title={<>{stop.title}</>}
       />
 
       <div className="mt-5">
-        <ShoreDots found={foundCount} total={TOTAL_STOPS} />
-        <p className="mt-3 text-center font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-          {foundCount} of {TOTAL_STOPS} shores claimed &middot; chart {s.r2Pos + 1}
+        <p className="text-center font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+          One shore stands between you and the final
         </p>
       </div>
 
@@ -600,34 +576,18 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
 
       <div className="mt-8">
         <p className="text-center text-sm leading-6 text-muted-foreground">
-          Stand on the shore. Breathe. Then claim it.
+          Stand on the shore. Breathe. Then head to the final round.
         </p>
         <div className="mt-4">
           <ConfirmButton
             variant="primary"
-            confirmLabel="Tap again — boots on the ground?"
-            onConfirm={claimShore}
+            confirmLabel="Tap again — to the final?"
+            onConfirm={goFinal}
           >
-            Claim this shore
+            Head to the final round
           </ConfirmButton>
         </div>
       </div>
-
-      {foundCount > 0 && (
-        <div className="mt-8 border border-border px-5 py-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-            Claimed shores
-          </p>
-          <ul className="mt-2 space-y-1.5">
-            {s.r2Found.map((id) => (
-              <li key={id} className="flex items-center gap-2 text-sm">
-                <span className="h-1.5 w-1.5 rotate-45 bg-primary" aria-hidden />
-                {getStopById(id).title}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
@@ -694,8 +654,8 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
           incl. {s.penaltySec}s penalties &middot; {s.teamName} ({s.teamId})
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Named {s.r1Questions.length} marks &middot; {s.r2Found.length}/{TOTAL_STOPS} shores
-          claimed
+          Named {s.r1Questions.length} marks &middot;{" "}
+          {s.r2Found.length > 0 ? `${getStopById(s.r2Found[0]!).title} claimed` : "shore unclaimed"}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {HUNT_STOPS.map((st) => (
@@ -764,7 +724,7 @@ export function Game() {
                 The hunt is on.
               </>
             }
-            sub="Seven shores ahead, one verse per shore. Walk them all."
+            sub="One shore ahead, one verse. Walk it, then face the final."
             action="Begin the walk"
             onAction={() => update((g) => ({ ...g, phase: "r2intro" }))}
           />
@@ -778,11 +738,11 @@ export function Game() {
               <>
                 Seven shores.
                 <br />
-                One verse each.
+                One verse.
               </>
             }
-            sub="Your route is yours alone — no two crews walk the same order, and each shore shows your crew a single verse. Claim all seven to face the final reckoning."
-            action="Unroll the first chart"
+            sub="Your crew is dealt a single shore and a single verse. Read it, walk it, then head straight to the final."
+            action="Unroll the verse"
             onAction={() => update((g) => ({ ...g, phase: "r2" }))}
           />
         );
