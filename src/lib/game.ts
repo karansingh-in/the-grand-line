@@ -5,7 +5,7 @@ export type TechId =
   | "git"
   | "docker"
   | "kubernetes"
-  | "redis"
+  | "adobe"
   | "postgres"
   | "mongodb"
   | "antigravity"
@@ -20,7 +20,7 @@ export type TechId =
   | "aws"
   | "vscode"
   | "npm"
-  | "postman";
+  | "spacex";
 
 /** Round 1 is pure identification: see the real mark, name the tech. */
 export type Round1Q = {
@@ -46,12 +46,12 @@ export const TECH_DECK: { id: TechId; name: string; diff: Difficulty }[] = [
   { id: "vscode", name: "VS Code", diff: "easy" },
   { id: "npm", name: "npm", diff: "easy" },
   { id: "kubernetes", name: "Kubernetes", diff: "medium" },
-  { id: "redis", name: "Redis", diff: "medium" },
+  { id: "adobe", name: "Adobe", diff: "easy" },
   { id: "postgres", name: "PostgreSQL", diff: "medium" },
   { id: "mongodb", name: "MongoDB", diff: "medium" },
   { id: "nodejs", name: "Node.js", diff: "medium" },
   { id: "react", name: "React", diff: "medium" },
-  { id: "postman", name: "Postman", diff: "medium" },
+  { id: "spacex", name: "SpaceX", diff: "medium" },
   { id: "antigravity", name: "Antigravity", diff: "hard" },
   { id: "claude", name: "Claude", diff: "hard" },
   { id: "openai", name: "ChatGPT", diff: "hard" },
@@ -71,12 +71,14 @@ export const TECH_BY_ID: Record<TechId, { name: string; diff: Difficulty }> = Ob
 /** Tools that look alike stay together — wrong answers sting more. */
 const FAMILIES: TechId[][] = [
   ["docker", "kubernetes"],
-  ["redis", "postgres", "mongodb"],
+  ["postgres", "mongodb"],
+  ["adobe"],
+  ["spacex"],
   ["aws"],
   ["openai", "claude", "perplexity", "gemini", "antigravity"],
   ["git", "github"],
   ["python", "nodejs", "react", "npm"],
-  ["linux", "vscode", "postman"],
+  ["linux", "vscode"],
 ];
 
 function familyOf(id: TechId): TechId[] {
