@@ -8,7 +8,7 @@ import kubernetes from "@/assets/tech/kubernetes.svg?raw";
 import redis from "@/assets/tech/redis.svg?raw";
 import postgres from "@/assets/tech/postgres.svg?raw";
 import mongodb from "@/assets/tech/mongodb.svg?raw";
-import kafka from "@/assets/tech/kafka.svg?raw";
+import antigravity from "@/assets/tech/antigravity.svg?raw";
 import claude from "@/assets/tech/claude.svg?raw";
 import openai from "@/assets/tech/openai.svg?raw";
 import perplexity from "@/assets/tech/perplexity.svg?raw";
@@ -16,7 +16,7 @@ import linux from "@/assets/tech/linux.svg?raw";
 import python from "@/assets/tech/python.svg?raw";
 import nodejs from "@/assets/tech/nodejs.svg?raw";
 import react from "@/assets/tech/react.svg?raw";
-import nginx from "@/assets/tech/nginx.svg?raw";
+import gemini from "@/assets/tech/gemini.svg?raw";
 import aws from "@/assets/tech/aws.svg?raw";
 import vscode from "@/assets/tech/vscode.svg?raw";
 import npm from "@/assets/tech/npm.svg?raw";
@@ -30,7 +30,7 @@ const MARKS: Record<TechId, string> = {
   redis,
   postgres,
   mongodb,
-  kafka,
+  antigravity,
   claude,
   openai,
   perplexity,
@@ -38,7 +38,7 @@ const MARKS: Record<TechId, string> = {
   python,
   nodejs,
   react,
-  nginx,
+  gemini,
   aws,
   vscode,
   npm,
