@@ -10,7 +10,7 @@ export const Route = createFileRoute("/final")({
           Final reckoning
         </p>
         <h2 className="mt-4 font-display text-4xl leading-tight">Claim all seven shores first.</h2>
-        <div className="mx-auto mt-8 h-px w-16 bg-primary/60" />
+        <div className="hazard mx-auto mt-8 h-3 w-40" aria-hidden />
         <p className="mt-8 text-sm leading-6 text-muted-foreground">
           The final trial opens on your crew screen once the walking chart is complete.
         </p>

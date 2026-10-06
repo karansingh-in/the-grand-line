@@ -32,6 +32,8 @@ import {
   OptionRow,
   VerseCard,
   ConfirmButton,
+  Ticker,
+  Chip,
 } from "@/components/ui";
 
 export function Compass({ size = 220 }: { size?: number }) {
@@ -208,6 +210,10 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
       <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+            <span
+              className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-primary"
+              aria-hidden
+            />
             Elapsed
           </p>
           <p className="font-mono text-2xl tabular-nums text-foreground">
@@ -244,19 +250,32 @@ function Landing({ onEnter }: { onEnter: () => void }) {
         <p className="mt-8 font-display text-[13px] uppercase tracking-[0.4em] text-primary">
           Hack the Hunt
         </p>
-        <h1 className="mt-5 font-display text-[52px] leading-[1.0] sm:text-6xl">
-          Hack
+        <h1 className="mt-5 font-display text-[56px] leading-[0.95] sm:text-7xl">
+          <span className="glow-text text-primary">Hack</span>
           <br />
           the
           <br />
-          Hunt
+          <span className="text-outline">Hunt</span>
         </h1>
+        <Ticker
+          className="mt-8"
+          items={["Hack the Hunt", "organized by SHAIDS", "ten trials", "one shore", "one final"]}
+        />
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Chip>10 trials</Chip>
+          <Chip tone="neon">1 shore</Chip>
+          <Chip tone="hot">1 final</Chip>
+        </div>
         <div className="mx-auto mt-8 flex max-w-[300px] items-center justify-center gap-3">
           {TEASER.map((t, i) => (
             <span
               key={t}
               style={{ animationDelay: `${i * 650}ms` }}
-              className="float-slow flex h-14 w-14 items-center justify-center bg-parchment shadow-xl"
+              className={
+                i % 2 === 0
+                  ? "tilt-l float-slow flex h-14 w-14 items-center justify-center border-2 border-ink bg-parchment hard-shadow-sm"
+                  : "tilt-r float-slow flex h-14 w-14 items-center justify-center border-2 border-ink bg-parchment hard-shadow-sm"
+              }
             >
               <TechMark id={t} size={34} />
             </span>
@@ -392,7 +411,7 @@ function Specimen({
 }) {
   return (
     <figure className="mx-auto w-full max-w-[300px]">
-      <div className="specimen-shine chart-corners relative flex h-64 items-center justify-center bg-parchment shadow-2xl">
+      <div className="specimen-shine chart-corners relative flex h-64 items-center justify-center border-2 border-ink bg-parchment hard-shadow">
         <span
           className="breathe pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,oklch(0.72_0.11_85/0.16),transparent_70%)]"
           aria-hidden
@@ -714,10 +733,11 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
         <p className="mt-3 text-xs text-muted-foreground">
           incl. {s.penaltySec}s penalties &middot; {s.teamName} ({s.teamId})
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Named {s.r1Questions.length} marks &middot;{" "}
-          {s.r2Found.length > 0 ? "shore claimed" : "shore unclaimed"}
-        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <Chip>{s.r1Questions.length} marks named</Chip>
+          <Chip tone="neon">{s.r2Found.length > 0 ? "shore claimed" : "shore unclaimed"}</Chip>
+          <Chip tone="hot">+{s.penaltySec}s penalties</Chip>
+        </div>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {HUNT_STOPS.map((st) => (
             <span
