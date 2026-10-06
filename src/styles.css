@@ -153,6 +153,11 @@
   .fade-up,
   .compass-spin,
   .compass-drift,
+  .specimen-shine::after,
+  .stamp-in,
+  .float-slow,
+  .breathe,
+  .pip-now,
   .gold-pulse {
     animation: none;
   }
@@ -207,5 +212,125 @@
   }
   50% {
     transform: rotate(8deg);
+  }
+}
+
+.specimen-shine {
+  position: relative;
+  overflow: hidden;
+}
+.specimen-shine::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(105deg, transparent 42%, oklch(1 0 0 / 0.35) 50%, transparent 58%);
+  animation: shine-sweep 1.1s ease-out 0.15s both;
+  pointer-events: none;
+}
+
+.stamp-in {
+  animation: stamp-in 0.45s cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+.veil-in {
+  animation: veil-in 0.95s ease both;
+}
+
+.float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+.typed-caret::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: -0.15em;
+  background: var(--color-primary);
+  animation: caret-blink 1s steps(2) infinite;
+}
+
+.breathe {
+  animation: breathe 4.5s ease-in-out infinite;
+}
+
+.pip-now {
+  animation: pip-now 1.6s ease-in-out infinite;
+}
+
+@keyframes shine-sweep {
+  from {
+    transform: translateX(-45%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(45%);
+    opacity: 0;
+  }
+}
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(2.1) rotate(-14deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+@keyframes veil-in {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes pip-now {
+  0%,
+  100% {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(45deg) scale(1.35);
+    opacity: 0.7;
   }
 }
