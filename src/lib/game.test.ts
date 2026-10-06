@@ -40,9 +40,9 @@ describe("Round 1 identification bank", () => {
     }
   });
 
-  it("covers everyday apps non-tech players know", () => {
+  it("covers github/docker/kubernetes/redis", () => {
     const ids = new Set(TECH_DECK.map((t) => t.id));
-    for (const c of ["instagram", "whatsapp", "youtube", "spotify"] as const)
+    for (const c of ["github", "docker", "kubernetes", "redis"] as const)
       expect(ids.has(c)).toBe(true);
   });
 });
