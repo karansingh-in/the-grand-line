@@ -9,9 +9,9 @@ import redis from "@/assets/tech/redis.svg?raw";
 import postgres from "@/assets/tech/postgres.svg?raw";
 import mongodb from "@/assets/tech/mongodb.svg?raw";
 import kafka from "@/assets/tech/kafka.svg?raw";
-import terraform from "@/assets/tech/terraform.svg?raw";
-import prometheus from "@/assets/tech/prometheus.svg?raw";
-import grafana from "@/assets/tech/grafana.svg?raw";
+import claude from "@/assets/tech/claude.svg?raw";
+import openai from "@/assets/tech/openai.svg?raw";
+import perplexity from "@/assets/tech/perplexity.svg?raw";
 import linux from "@/assets/tech/linux.svg?raw";
 import python from "@/assets/tech/python.svg?raw";
 import nodejs from "@/assets/tech/nodejs.svg?raw";
@@ -31,9 +31,9 @@ const MARKS: Record<TechId, string> = {
   postgres,
   mongodb,
   kafka,
-  terraform,
-  prometheus,
-  grafana,
+  claude,
+  openai,
+  perplexity,
   linux,
   python,
   nodejs,

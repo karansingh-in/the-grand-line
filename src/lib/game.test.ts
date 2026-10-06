@@ -42,7 +42,15 @@ describe("Round 1 identification bank", () => {
 
   it("covers github/docker/kubernetes/redis", () => {
     const ids = new Set(TECH_DECK.map((t) => t.id));
-    for (const c of ["github", "docker", "kubernetes", "redis"] as const)
+    for (const c of [
+      "github",
+      "docker",
+      "kubernetes",
+      "redis",
+      "claude",
+      "openai",
+      "perplexity",
+    ] as const)
       expect(ids.has(c)).toBe(true);
   });
 });
