@@ -6,14 +6,11 @@ import {
   elapsedSec,
   normalizeTeamCode,
   withRev,
-  shuffledStopOrder,
   HUNT_STOPS,
   TOTAL_STOPS,
   getStopById,
-  MAX_HINTS,
-  spendHint,
-  hintKeyForStop,
-  getStopHint,
+  stopIdForTeamCount,
+  stopIdForTeamCode,
   isCompatibleState,
   roman,
 } from "@/lib/game";
@@ -71,45 +68,31 @@ describe("team codes + timer", () => {
   });
 });
 
-describe("physical round 2: seven shores, shuffled per crew", () => {
-  it("defines 7 stops with 3 riddles and a nudge each", () => {
-    expect(TOTAL_STOPS).toBe(7);
-    expect(HUNT_STOPS).toHaveLength(7);
+describe("fixed round 2: three verses in login order", () => {
+  it("defines 3 verse-only stops", () => {
+    expect(TOTAL_STOPS).toBe(3);
+    expect(HUNT_STOPS).toHaveLength(3);
+    expect(HUNT_STOPS.map((s) => s.id)).toEqual([1, 2, 3]);
     for (const s of HUNT_STOPS) {
-      expect(s.riddles).toHaveLength(3);
-      for (const r of s.riddles) expect(r.length).toBeGreaterThan(10);
-      expect(s.nudge.length).toBeGreaterThan(10);
-      expect(getStopById(s.id).title).toBe(s.title);
+      expect(s.verse.length).toBeGreaterThan(20);
+      expect(getStopById(s.id).verse).toBe(s.verse);
     }
   });
 
-  it("deals every crew all 7 stops in a random order", () => {
-    const seen = new Set<string>();
-    for (let i = 0; i < 30; i++) {
-      const order = shuffledStopOrder();
-      expect(order).toHaveLength(7);
-      expect(new Set(order).size).toBe(7);
-      seen.add(order.join(","));
-    }
-    expect(seen.size).toBeGreaterThan(1);
-    const g = newGame("Crew", "CODE-1");
-    expect(g.r2Order).toHaveLength(7);
-    expect(new Set(g.r2Order).size).toBe(7);
-    expect(g.r2Pos).toBe(0);
-    expect(g.r2Found).toEqual([]);
-    for (const id of g.r2Order) {
-      expect(g.r2Verses[String(id)]).toBeGreaterThanOrEqual(0);
-      expect(g.r2Verses[String(id)]).toBeLessThanOrEqual(2);
+  it("deals stops in registration order, wrapping after the third crew", () => {
+    expect([0, 1, 2, 3, 4, 5].map(stopIdForTeamCount)).toEqual([1, 2, 3, 1, 2, 3]);
+  });
+
+  it("falls back to a stable per-code stop when offline", () => {
+    expect(stopIdForTeamCode("STRAW-HATS-01")).toBe(stopIdForTeamCode("STRAW-HATS-01"));
+    for (const code of ["A", "B", "C", "D", "E", "F"]) {
+      expect([1, 2, 3]).toContain(stopIdForTeamCode(code));
     }
   });
 
-  it("deals a random verse per stop, varying across crews", () => {
-    const seen = new Set<string>();
-    for (let i = 0; i < 20; i++) {
-      const g = newGame("Crew", "CODE-" + i);
-      seen.add(g.r2Order.map((id) => g.r2Verses[String(id)]).join(""));
-    }
-    expect(seen.size).toBeGreaterThan(1);
+  it("deals the rotated stop into new games", () => {
+    expect(newGame("Crew", "C1", 2).r2Order).toEqual([2]);
+    expect(newGame("Crew", "C1").r2Order).toEqual([1]);
   });
 
   it("roman numerals for charts", () => {
@@ -127,45 +110,13 @@ describe("remote state compatibility gate", () => {
     expect(isCompatibleState(null)).toBe(false);
     expect(isCompatibleState({})).toBe(false);
     expect(isCompatibleState({ ...fresh, phase: "mystery" })).toBe(false);
-    // v4 icon-format questions
     expect(
       isCompatibleState({
         ...fresh,
         r1Questions: [{ ...fresh.r1Questions[0], format: "mark-name" }],
       }),
     ).toBe(false);
-    // missing dealt verses / route / found list / hints
-    const { r2Verses: _v, ...noVerses } = fresh;
-    expect(isCompatibleState(noVerses)).toBe(false);
     expect(isCompatibleState({ ...fresh, r2Order: [1, 2, 3] })).toBe(false);
     expect(isCompatibleState({ ...fresh, r2Found: null })).toBe(false);
-    expect(isCompatibleState({ ...fresh, hintsLeft: "2" })).toBe(false);
-  });
-});
-
-describe("hints: 2 per team, any shore", () => {
-  it("starts with 2 hints", () => {
-    expect(newGame("Crew", "CODE-1").hintsLeft).toBe(2);
-    expect(MAX_HINTS).toBe(2);
-  });
-
-  it("spends both hints on the same stop, idempotent per level", () => {
-    let g = newGame("Crew", "CODE-1");
-    expect(hintKeyForStop(1, 1)).not.toBe(hintKeyForStop(1, 2));
-    expect(getStopHint(1, 2).length).toBeGreaterThan(10);
-    const r1 = spendHint(g, hintKeyForStop(1, 1), getStopHint(1, 1));
-    expect(r1.ok).toBe(true);
-    g = r1.next;
-    expect(g.hintsLeft).toBe(1);
-    const dup = spendHint(g, hintKeyForStop(1, 1), getStopHint(1, 1));
-    expect(dup.already).toBe(true);
-    expect(dup.next.hintsLeft).toBe(1);
-    const r2 = spendHint(dup.next, hintKeyForStop(1, 2), getStopHint(1, 2));
-    expect(r2.ok).toBe(true);
-    expect(r2.next.hintsLeft).toBe(0);
-    expect(r2.next.revealedHints[hintKeyForStop(1, 2)]).toBe(getStopHint(1, 2));
-    const r3 = spendHint(r2.next, hintKeyForStop(2, 1), getStopHint(2, 1));
-    expect(r3.ok).toBe(false);
-    expect(r3.next.hintsLeft).toBe(0);
   });
 });

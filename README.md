@@ -23,16 +23,16 @@ npx vite dev --host
 ```
 
 Copy `.env.example` to `.env` and fill in the Supabase values to enable
-multi-device team sync and the live leaderboard. Without them the game
+multi-device team sync. Without them the game
 runs in local-only mode.
 
 ## Round 2 — hosts, read this
 
-Seven candidate shores live in `src/lib/game.ts` (`HUNT_STOPS`) — each crew is dealt one at random. Each has a title, an
-`area` (the real place), three `riddles` (cryptic first, near-explicit
-last — each crew is dealt one at random), and a `nudge` (costs the team 1 of its 2 chart notes). Replace the
-placeholder areas/riddles with your venue before the event. Each crew
-is dealt a single random shore and verse, so routes differ per team.
+Three fixed verses live in `src/lib/game.ts` (`HUNT_STOPS`): Throne,
+Registration desk, Lootbox. The 1st crew to register is dealt the 1st
+verse, the 2nd crew the 2nd, the 3rd the 3rd, then it wraps. No hints,
+no leaderboard — one verse on foot, then straight to the final.
+Empty the `teams` table before the event so the rotation starts at zero.
 
 No QR codes, no scanning — the round is entirely on foot. Old
 `/fragment`, `/decoy`, and `/final` links now show a retired notice and
@@ -51,10 +51,8 @@ No `vercel.json` needed — the server preset is pinned to Vercel in
    - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID`
 4. In the Supabase SQL editor, run once:
    `supabase/migrations/20261003000000_create_teams.sql`
-   (creates the `teams` table for sync + leaderboard).
-5. Host screen: `https://<app>.vercel.app/leaderboard`
-6. Smoke test: two phones → same crew code → progress syncs; finishing
-   crew appears on `/leaderboard`.
+   (creates the `teams` table for team sync).
+5. Smoke test: two phones → same crew code → progress syncs.
 
 ## Scripts
 

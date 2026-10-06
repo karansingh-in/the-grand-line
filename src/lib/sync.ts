@@ -104,6 +104,31 @@ export async function fetchTeam(teamCode: string): Promise<GameState | null> {
   }
 }
 
+/**
+ * How many crews have registered so far. Drives the fixed verse rotation
+ * (1st crew → stop 1, 2nd → stop 2, ...). Null when offline/unconfigured —
+ * callers fall back to a code hash instead.
+ */
+export async function fetchTeamCount(): Promise<number | null> {
+  const sb = await getSupabase();
+  if (!sb) return null;
+  try {
+    const { count, error } = await (
+      sb as never as {
+        from: (t: string) => {
+          select: (c: string, o: unknown) => Promise<{ count: number | null; error: unknown }>;
+        };
+      }
+    )
+      .from("teams")
+      .select("team_code", { count: "exact", head: true });
+    if (error || typeof count !== "number") return null;
+    return count;
+  } catch {
+    return null;
+  }
+}
+
 export type LeaderboardEntry = {
   team_code: string;
   team_name: string;
