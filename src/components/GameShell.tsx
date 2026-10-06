@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Atmosphere } from "@/components/Atmosphere";
 
 function GithubMark() {
   return (
@@ -20,6 +21,7 @@ export function Shell({ children, timer }: { children: ReactNode; timer?: ReactN
   return (
     <main className="ocean-bg relative min-h-screen overflow-hidden">
       <div className="map-lines pointer-events-none absolute inset-0" />
+      <Atmosphere />
       <div className="grain pointer-events-none absolute inset-0" />
       <div className="vignette pointer-events-none absolute inset-0" />
       <GithubMark />

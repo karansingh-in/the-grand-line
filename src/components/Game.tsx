@@ -21,6 +21,7 @@ import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
 import { Shell } from "@/components/GameShell";
 import { Leaderboard } from "@/components/Leaderboard";
 import { TechMark } from "@/components/TechMark";
+import { FoilBurst } from "@/components/Atmosphere";
 import {
   Kicker,
   Title,
@@ -33,7 +34,6 @@ import {
   OptionRow,
   VerseCard,
   ConfirmButton,
-  Progress,
   HintPips,
 } from "@/components/ui";
 
@@ -71,6 +71,60 @@ export function Compass({ size = 220 }: { size?: number }) {
       <polygon points="100,22 108,100 100,178 92,100" fill="currentColor" opacity="0.6" />
       <polygon points="22,100 100,92 178,100 100,108" fill="currentColor" opacity="0.3" />
     </svg>
+  );
+}
+
+function isReducedMotion() {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+const VEIL_TITLES: Record<string, { kicker: string; title: string }> = {
+  r1: { kicker: "Chapter One", title: "Name the Mark" },
+  r1done: { kicker: "Trials Complete", title: "The Hunt Walks" },
+  r2intro: { kicker: "Chapter Two", title: "The Walking Chart" },
+  final: { kicker: "The Final Round", title: "The Final Flag" },
+  complete: { kicker: "Hunt Complete", title: "Flag Captured" },
+};
+
+function TrialPips({ index, total }: { index: number; total: number }) {
+  return (
+    <div
+      className="flex items-center justify-between"
+      role="progressbar"
+      aria-valuenow={index}
+      aria-valuemax={total}
+      aria-label={`${index} of ${total} trials`}
+    >
+      {Array.from({ length: total }).map((_, i) => (
+        <span
+          key={i}
+          className={
+            i < index
+              ? "h-2 w-2 rotate-45 bg-primary/80"
+              : i === index
+                ? "pip-now h-2 w-2 rotate-45 bg-primary"
+                : "h-2 w-2 rotate-45 border border-border"
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
+function TypedLine({ text, className }: { text: string; className?: string }) {
+  const [n, setN] = useState(0);
+  const [reduced] = useState(() => isReducedMotion());
+  useEffect(() => {
+    if (reduced || n >= text.length) return;
+    const id = setTimeout(() => setN((v) => v + 1), 36);
+    return () => clearTimeout(id);
+  }, [n, text, reduced]);
+  return (
+    <p className={className}>
+      {text.slice(0, n)}
+      {n < text.length && <span className="typed-caret" aria-hidden />}
+    </p>
   );
 }
 
@@ -201,10 +255,11 @@ function Landing({ onEnter }: { onEnter: () => void }) {
           Hunt
         </h1>
         <div className="mx-auto mt-8 flex max-w-[300px] items-center justify-center gap-3">
-          {TEASER.map((t) => (
+          {TEASER.map((t, i) => (
             <span
               key={t}
-              className="flex h-14 w-14 items-center justify-center bg-parchment shadow-xl"
+              style={{ animationDelay: `${i * 650}ms` }}
+              className="float-slow flex h-14 w-14 items-center justify-center bg-parchment shadow-xl"
             >
               <TechMark id={t} size={34} />
             </span>
@@ -215,7 +270,7 @@ function Landing({ onEnter }: { onEnter: () => void }) {
         </p>
         <ChartRule className="mx-auto mt-8 max-w-[220px]" />
         <div className="mt-8 space-y-1.5 text-[15px] text-muted-foreground">
-          <p>Ten trials of craft. Seven shores on foot.</p>
+          <TypedLine text="Ten trials of craft. One shore on foot." />
           <p>One crew, one clock, two lifelines.</p>
         </div>
         <div className="mx-auto mt-12 w-full max-w-[280px]">
@@ -332,7 +387,17 @@ function Specimen({
 }) {
   return (
     <figure className="mx-auto w-full max-w-[300px]">
-      <div className="chart-corners relative flex h-64 items-center justify-center bg-parchment shadow-2xl">
+      <div className="specimen-shine chart-corners relative flex h-64 items-center justify-center bg-parchment shadow-2xl">
+        <span
+          className="breathe pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,oklch(0.72_0.11_85/0.16),transparent_70%)]"
+          aria-hidden
+        />
+        <span
+          className="absolute -left-3 -top-3 flex h-11 w-11 items-center justify-center rounded-full border border-primary/70 bg-ink font-display text-sm text-primary shadow-xl"
+          aria-hidden
+        >
+          {diff[0]?.toUpperCase()}
+        </span>
         <TechMark id={techId} size={148} />
         {flash > 0 && (
           <span key={flash} className="absolute right-4 top-4 font-mono text-sm text-accent">
@@ -423,7 +488,7 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         title={<>Which tool bears this mark?</>}
       />
       <div className="mt-4">
-        <Progress value={s.r1Index} max={s.r1Questions.length} />
+        <TrialPips index={s.r1Index} total={s.r1Questions.length} />
       </div>
 
       <div className="py-8">
@@ -512,7 +577,8 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
     update(() => ({ ...next, rev: next.rev }));
   };
 
-  const goFinal = () => {
+  const [stamped, setStamped] = useState(false);
+  const commitShore = () => {
     update((g) => {
       const cur = g.r2Order[0]!;
       return {
@@ -521,6 +587,15 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         phase: "final",
       };
     });
+  };
+  const goFinal = () => {
+    if (stamped) return;
+    if (isReducedMotion()) {
+      commitShore();
+      return;
+    }
+    setStamped(true);
+    setTimeout(commitShore, 1000);
   };
 
   return (
@@ -588,6 +663,13 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
           </ConfirmButton>
         </div>
       </div>
+      {stamped && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-8">
+          <div className="stamp-in border-4 border-primary bg-background/80 px-10 py-5 text-center font-display text-3xl tracking-[0.18em] text-primary">
+            CLAIMED
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -631,11 +713,17 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
 }
 
 function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
+  const [burst, setBurst] = useState(true);
   return (
     <div className="flex flex-col items-center py-10 text-center">
       <div className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2">
         <Compass size={320} />
       </div>
+      {burst && (
+        <div className="pointer-events-none absolute inset-0">
+          <FoilBurst onDone={() => setBurst(false)} />
+        </div>
+      )}
       <div className="relative w-full max-w-[360px]">
         <Kicker className="text-primary">Hunt complete</Kicker>
         <Title className="mt-4">
@@ -690,15 +778,41 @@ export function Game() {
       setEntered(false);
     }
   };
+  const prevPhase = useRef<string | null>(null);
+  const [veil, setVeil] = useState<{ kicker: string; title: string; key: number } | null>(null);
+  useEffect(() => {
+    if (!s) return;
+    const from = prevPhase.current;
+    prevPhase.current = s.phase;
+    if (!from || from === s.phase || isReducedMotion()) return;
+    const v = VEIL_TITLES[s.phase];
+    if (!v) return;
+    setVeil({ kicker: v.kicker, title: v.title, key: Date.now() });
+    const id = setTimeout(() => setVeil(null), 980);
+    return () => clearTimeout(id);
+  }, [s]);
+  const veilNode = veil ? (
+    <div
+      key={veil.key}
+      className="veil-in fixed inset-0 z-40 flex flex-col items-center justify-center bg-background/95 px-8 text-center"
+    >
+      <p className="font-mono text-[11px] uppercase tracking-[0.34em] text-primary">
+        {veil.kicker}
+      </p>
+      <p className="mt-4 font-display text-4xl leading-tight">{veil.title}</p>
+    </div>
+  ) : null;
   if (!ready)
     return (
       <Shell>
+        {veilNode}
         <div />
       </Shell>
     );
   if (!s)
     return (
       <Shell>
+        {veilNode}
         {entered ? (
           <TeamEntry onStart={(g) => adopt(g)} />
         ) : (
@@ -756,5 +870,10 @@ export function Game() {
         return null;
     }
   })();
-  return <Shell timer={s.phase === "complete" ? undefined : timer}>{body}</Shell>;
+  return (
+    <Shell timer={s.phase === "complete" ? undefined : timer}>
+      {veilNode}
+      {body}
+    </Shell>
+  );
 }
