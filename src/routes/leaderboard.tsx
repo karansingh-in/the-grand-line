@@ -12,7 +12,7 @@ export const Route = createFileRoute("/leaderboard")({
         <h2 className="mt-4 font-display text-4xl leading-tight">The standings are gone.</h2>
         <div className="hazard mx-auto mt-8 h-3 w-40" aria-hidden />
         <p className="mt-8 text-sm leading-6 text-muted-foreground">
-          There is no leaderboard in this hunt — only the final flag. Return to your crew screen.
+          There is no leaderboard in this hunt — only the One Piece. Return to your crew screen.
         </p>
         <Link
           to="/"

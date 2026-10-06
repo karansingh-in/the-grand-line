@@ -208,7 +208,7 @@ export function VerseCard({
           className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-primary"
           aria-hidden
         />
-        Incoming transmission &middot; verse {index} of {total}
+        Log Pose reading &middot; verse {index} of {total}
       </p>
       <p className="relative mt-3 font-mono text-[16px] leading-8 text-parchment">{children}</p>
     </div>

@@ -8,10 +8,10 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Navigate. Decode. Debug. Discover. A technical treasure hunt organized by SHAIDS.",
+          "Set sail. Name the pirates. Find the One Piece. A technical treasure hunt organized by SHAIDS.",
       },
       { property: "og:title", content: "Hack the Hunt — organized by SHAIDS" },
-      { property: "og:description", content: "Navigate. Decode. Debug. Discover." },
+      { property: "og:description", content: "Set sail. Name the pirates. Find the One Piece." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
