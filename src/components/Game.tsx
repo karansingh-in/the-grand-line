@@ -73,6 +73,19 @@ export function Compass({ size = 220 }: { size?: number }) {
   );
 }
 
+function StrawHat({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size * 0.62} viewBox="0 0 64 40" className="text-primary" aria-hidden>
+      <ellipse cx="32" cy="31" rx="28" ry="6.5" fill="currentColor" opacity="0.9" />
+      <path d="M17 31c0-11 6.5-19 15-19s15 8 15 19" fill="currentColor" />
+      <path
+        d="M17 26.5c5 2.6 25 2.6 30 0l0.6 3.4c-5.4 2.8-25.8 2.8-31.2 0z"
+        fill="var(--color-accent)"
+      />
+    </svg>
+  );
+}
+
 function isReducedMotion() {
   if (typeof window === "undefined") return true;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -82,8 +95,8 @@ const VEIL_TITLES: Record<string, { kicker: string; title: string }> = {
   r1: { kicker: "Chapter One", title: "Name the Mark" },
   r1done: { kicker: "Trials Complete", title: "The Hunt Walks" },
   r2intro: { kicker: "Chapter Two", title: "The Walking Chart" },
-  final: { kicker: "The Final Round", title: "The Final Flag" },
-  complete: { kicker: "Hunt Complete", title: "Flag Captured" },
+  final: { kicker: "The Final Voyage", title: "The One Piece" },
+  complete: { kicker: "King of the Pirates", title: "One Piece Found" },
 };
 
 function TrialPips({ index, total }: { index: number; total: number }) {
@@ -248,22 +261,29 @@ function Landing({ onEnter }: { onEnter: () => void }) {
       <div className="relative w-full">
         <Kicker>Organized by SHAIDS</Kicker>
         <p className="mt-8 font-display text-[13px] uppercase tracking-[0.4em] text-primary">
-          Hack the Hunt
+          ★ The Grand Line ★
         </p>
-        <h1 className="mt-5 font-display text-[56px] leading-[0.95] sm:text-7xl">
-          <span className="glow-text text-primary">Hack</span>
+        <div className="mt-8 flex justify-center">
+          <StrawHat size={72} />
+        </div>
+        <h1 className="mt-4 font-pirate text-[64px] leading-[0.95] text-primary sm:text-8xl">
+          Hack
           <br />
-          the
-          <br />
-          <span className="text-outline">Hunt</span>
+          the Hunt
         </h1>
         <Ticker
           className="mt-8"
-          items={["Hack the Hunt", "organized by SHAIDS", "ten trials", "one shore", "one final"]}
+          items={[
+            "The Grand Line",
+            "organized by SHAIDS",
+            "wanted · dead or alive",
+            "the One Piece is real",
+            "no Log Pose needed",
+          ]}
         />
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Chip>10 trials</Chip>
-          <Chip tone="neon">1 shore</Chip>
+          <Chip tone="neon">1 island</Chip>
           <Chip tone="hot">1 final</Chip>
         </div>
         <div className="mx-auto mt-8 flex max-w-[300px] items-center justify-center gap-3">
@@ -282,11 +302,11 @@ function Landing({ onEnter }: { onEnter: () => void }) {
           ))}
         </div>
         <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-          Know your vessels
+          Know your crew
         </p>
         <ChartRule className="mx-auto mt-8 max-w-[220px]" />
         <div className="mt-8 space-y-1.5 text-[15px] text-muted-foreground">
-          <TypedLine text="Ten trials of craft. One shore on foot." />
+          <TypedLine text="Ten trials of craft. One island on foot." />
           <p>One crew, one clock, two lifelines.</p>
         </div>
         <div className="mx-auto mt-12 w-full max-w-[280px]">
@@ -409,9 +429,16 @@ function Specimen({
   diff: string;
   flash: number;
 }) {
+  const bounty = diff === "easy" ? "30,000,000" : diff === "medium" ? "150,000,000" : "500,000,000";
   return (
     <figure className="mx-auto w-full max-w-[300px]">
-      <div className="specimen-shine chart-corners relative flex h-64 items-center justify-center border-2 border-ink bg-parchment hard-shadow">
+      <div className="border-2 border-ink bg-parchment px-4 pt-3 text-center hard-shadow">
+        <p className="font-pirate text-[34px] leading-none text-ink">WANTED</p>
+        <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.34em] text-ink/70">
+          Dead or alive
+        </p>
+      </div>
+      <div className="specimen-shine chart-corners relative flex h-60 items-center justify-center border-2 border-t-0 border-ink bg-parchment hard-shadow">
         <span
           className="breathe pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,oklch(0.72_0.11_85/0.16),transparent_70%)]"
           aria-hidden
@@ -429,9 +456,14 @@ function Specimen({
           </span>
         )}
       </div>
+      <div className="border-2 border-t-0 border-ink bg-parchment px-4 py-3 text-center hard-shadow">
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink">
+          Bounty ฿{bounty} · alias unknown
+        </p>
+      </div>
       <figcaption className="mt-3 flex items-baseline justify-between border-b border-border pb-3">
         <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-          Exhibit Nº {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          Poster Nº {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
         </span>
         <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
           {diff}
@@ -507,9 +539,9 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
   return (
     <div key={s.r1Index} className="mx-auto w-full max-w-[400px] py-4">
       <ChapterHead
-        kicker="Chapter one &middot; name the mark"
+        kicker="Chapter one &middot; name the pirate"
         numeral={`${s.r1Index + 1} / ${s.r1Questions.length}`}
-        title={<span className="font-tech">Which tool bears this mark?</span>}
+        title={<span>Which pirate flies this flag?!</span>}
       />
       <div className="mt-4">
         <TrialPips index={s.r1Index} total={s.r1Questions.length} />
@@ -616,13 +648,13 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
   return (
     <div key={stopId} className="mx-auto w-full max-w-[400px] py-4">
       <div className="text-center">
-        <Kicker>Chapter two &middot; the walking chart</Kicker>
+        <Kicker>Chapter two &middot; follow the Log Pose</Kicker>
         <p className="mt-3 font-display text-sm tracking-[0.3em] text-primary">I / I</p>
       </div>
 
       <div className="mt-5">
         <p className="text-center font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-          One shore stands between you and the final
+          One island stands between you and the final
         </p>
       </div>
 
@@ -639,7 +671,7 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
 
       <div className="mt-8">
         <p className="text-center text-sm leading-6 text-muted-foreground">
-          Stand on the shore. Breathe. Then head to the final round.
+          Set foot on the island. Breathe. Then head to the final round.
         </p>
         <div className="mt-4">
           <ConfirmButton
@@ -675,12 +707,8 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
         update((g) => ({ ...g, phase: "complete", endTs: Date.now() }));
       }}
     >
-      <Kicker className="text-primary">Final reckoning</Kicker>
-      <Title className="mt-4">
-        The Final
-        <br />
-        Flag
-      </Title>
+      <Kicker className="text-primary">Laugh Tale awaits</Kicker>
+      <Title className="mt-4 font-pirate text-6xl">The One Piece</Title>
       <ChartRule className="mx-auto mt-8 max-w-[200px]" />
       <p className="mt-8 text-[15px] leading-7 text-muted-foreground">
         The hosts will give you the final question offline.
@@ -717,9 +745,9 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
         </div>
       )}
       <div className="relative w-full max-w-[360px]">
-        <Kicker className="text-primary">Hunt complete</Kicker>
-        <Title className="mt-4">
-          The flag
+        <Kicker className="text-primary">King of the Pirates</Kicker>
+        <Title className="mt-4 font-pirate text-6xl">
+          The One Piece
           <br />
           is yours.
         </Title>
@@ -735,7 +763,7 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <Chip>{s.r1Questions.length} marks named</Chip>
-          <Chip tone="neon">{s.r2Found.length > 0 ? "shore claimed" : "shore unclaimed"}</Chip>
+          <Chip tone="neon">{s.r2Found.length > 0 ? "island claimed" : "island unclaimed"}</Chip>
           <Chip tone="hot">+{s.penaltySec}s penalties</Chip>
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -827,7 +855,7 @@ export function Game() {
                 The hunt is on.
               </>
             }
-            sub="One shore ahead, one verse. Walk it, then face the final."
+            sub="One island ahead, one verse. Walk it, then face the final."
             action="Begin the walk"
             onAction={() => update((g) => ({ ...g, phase: "r2intro" }))}
           />
@@ -839,12 +867,12 @@ export function Game() {
             numeral="II / II"
             title={
               <>
-                Seven shores.
+                One island.
                 <br />
                 One verse.
               </>
             }
-            sub="Your crew is dealt a single shore and a single verse. Read it, walk it, then head straight to the final."
+            sub="Your crew is dealt a single island and a single verse. Read it, walk it, then head straight to Laugh Tale."
             action="Unroll the verse"
             onAction={() => update((g) => ({ ...g, phase: "r2" }))}
           />

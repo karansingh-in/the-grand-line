@@ -13,7 +13,6 @@ export function Shell({ children, timer }: { children: ReactNode; timer?: ReactN
         className="pointer-events-none absolute -right-24 bottom-1/4 h-72 w-72 rounded-full bg-accent/15 blur-[100px]"
         aria-hidden
       />
-      <div className="scanlines pointer-events-none absolute inset-0 opacity-70" aria-hidden />
       <Atmosphere />
       <div className="grain pointer-events-none absolute inset-0" />
       <div className="vignette pointer-events-none absolute inset-0" />

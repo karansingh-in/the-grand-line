@@ -2,10 +2,10 @@
 
 Organized by SHAIDS.
 
-A mobile-first companion web app for a physical college treasure hunt.
+A mobile-first companion web app for a physical college treasure hunt, skinned head-to-toe in One Piece.
 Teams sail through two chapters on one continuous clock — ten trials of
 craft (name the tool from its real mark), then a walking chart: one shore
-on foot with a single random verse, then straight to the final.
+on foot with a single random verse on a single island, then straight to the One Piece.
 
 ## Run locally
 
