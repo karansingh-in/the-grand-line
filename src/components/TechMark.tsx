@@ -1,51 +1,51 @@
 import type { CSSProperties } from "react";
 import type { TechId } from "@/lib/game";
 
-import github from "@/assets/tech/github.svg?raw";
-import git from "@/assets/tech/git.svg?raw";
-import docker from "@/assets/tech/docker.svg?raw";
-import kubernetes from "@/assets/tech/kubernetes.svg?raw";
-import redis from "@/assets/tech/redis.svg?raw";
-import postgres from "@/assets/tech/postgres.svg?raw";
-import mongodb from "@/assets/tech/mongodb.svg?raw";
-import kafka from "@/assets/tech/kafka.svg?raw";
-import terraform from "@/assets/tech/terraform.svg?raw";
-import prometheus from "@/assets/tech/prometheus.svg?raw";
-import grafana from "@/assets/tech/grafana.svg?raw";
-import linux from "@/assets/tech/linux.svg?raw";
-import python from "@/assets/tech/python.svg?raw";
-import nodejs from "@/assets/tech/nodejs.svg?raw";
-import react from "@/assets/tech/react.svg?raw";
-import nginx from "@/assets/tech/nginx.svg?raw";
-import aws from "@/assets/tech/aws.svg?raw";
-import vscode from "@/assets/tech/vscode.svg?raw";
-import npm from "@/assets/tech/npm.svg?raw";
-import postman from "@/assets/tech/postman.svg?raw";
+import instagram from "@/assets/tech/instagram.svg?raw";
+import whatsapp from "@/assets/tech/whatsapp.svg?raw";
+import youtube from "@/assets/tech/youtube.svg?raw";
+import googlechrome from "@/assets/tech/googlechrome.svg?raw";
+import gmail from "@/assets/tech/gmail.svg?raw";
+import netflix from "@/assets/tech/netflix.svg?raw";
+import google from "@/assets/tech/google.svg?raw";
+import spotify from "@/assets/tech/spotify.svg?raw";
+import facebook from "@/assets/tech/facebook.svg?raw";
+import googlemaps from "@/assets/tech/googlemaps.svg?raw";
+import snapchat from "@/assets/tech/snapchat.svg?raw";
+import telegram from "@/assets/tech/telegram.svg?raw";
+import amazon from "@/assets/tech/amazon.svg?raw";
+import android from "@/assets/tech/android.svg?raw";
+import x from "@/assets/tech/x.svg?raw";
+import linkedin from "@/assets/tech/linkedin.svg?raw";
+import samsung from "@/assets/tech/samsung.svg?raw";
+import apple from "@/assets/tech/apple.svg?raw";
+import openai from "@/assets/tech/openai.svg?raw";
+import googlepay from "@/assets/tech/googlepay.svg?raw";
 
 const MARKS: Record<TechId, string> = {
-  github,
-  git,
-  docker,
-  kubernetes,
-  redis,
-  postgres,
-  mongodb,
-  kafka,
-  terraform,
-  prometheus,
-  grafana,
-  linux,
-  python,
-  nodejs,
-  react,
-  nginx,
-  aws,
-  vscode,
-  npm,
-  postman,
+  instagram,
+  whatsapp,
+  youtube,
+  googlechrome,
+  gmail,
+  netflix,
+  google,
+  spotify,
+  facebook,
+  googlemaps,
+  snapchat,
+  telegram,
+  amazon,
+  android,
+  x,
+  linkedin,
+  samsung,
+  apple,
+  openai,
+  googlepay,
 };
 
-/** Real brand mark, rendered monochrome via CSS for a consistent look. */
+/** Real brand mark, rendered in true brand colors on light specimen tiles. */
 export function TechMark({
   id,
   size = 96,
@@ -55,7 +55,7 @@ export function TechMark({
   size?: number;
   style?: CSSProperties;
 }) {
-  const svg = MARKS[id] ?? MARKS.git;
+  const svg = MARKS[id] ?? MARKS.google;
   return (
     <span
       className="tech-mark"

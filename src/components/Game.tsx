@@ -231,7 +231,7 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
   );
 }
 
-const TEASER: TechId[] = ["docker", "kubernetes", "python", "react"];
+const TEASER: TechId[] = ["instagram", "spotify", "whatsapp", "youtube"];
 
 function Landing({ onEnter }: { onEnter: () => void }) {
   return (
@@ -240,7 +240,7 @@ function Landing({ onEnter }: { onEnter: () => void }) {
         <Compass size={400} />
       </div>
       <div className="relative w-full">
-        <Kicker>Organized by SHAIDS &middot; est. 2026</Kicker>
+        <Kicker>Organized by SHAIDS</Kicker>
         <p className="mt-8 font-display text-[13px] uppercase tracking-[0.4em] text-primary">
           Hack the Hunt
         </p>
@@ -663,7 +663,11 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
         Flag
       </Title>
       <ChartRule className="mx-auto mt-8 max-w-[200px]" />
-      <p className="mt-8 text-lg leading-8">{q.q}</p>
+      <p className="mt-8 text-[15px] leading-7 text-muted-foreground">
+        The hosts will give you the final question offline.
+        <br />
+        Type the answer below.
+      </p>
       <input
         className={`${inputCls} mt-8 text-center`}
         value={ans}

@@ -34,6 +34,12 @@ verse, the 2nd crew the 2nd, the 3rd the 3rd, then it wraps. No hints,
 no leaderboard — one verse on foot, then straight to the final.
 Empty the `teams` table before the event so the rotation starts at zero.
 
+## Final — hosts, read this
+
+The final question is announced offline (on stage), so the app shows
+only an answer box. Every crew expects the SAME answer: `FINAL_QUESTIONS[0]`
+in `src/lib/game.ts`. Set its `a` to the answer of whatever you announce.
+
 No QR codes, no scanning — the round is entirely on foot. Old
 `/fragment`, `/decoy`, and `/final` links now show a retired notice and
 point back at the game.
