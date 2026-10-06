@@ -109,112 +109,39 @@ export const FINAL_QUESTIONS = [
 ];
 
 export type HuntStop = {
-  /** Stable 1-based id. Hosts: keep ids, edit titles/areas/riddles freely. */
+  /** Stable 1-based id. */
   id: number;
-  title: string;
-  /** Real-world place. Placeholder until hosts fill in the venue. */
-  area: string;
-  /** Three verses, always shown together — cryptic first, near-explicit last. */
-  riddles: [string, string, string];
-  /** Extra nudge, costs 1 of the team's 2 hints. */
-  nudge: string;
-  /** Second, near-explicit nudge for the same shore — the other hint. */
-  nudge2: string;
+  /** Internal label only — never rendered to players. */
+  label: string;
+  /** The verse shown to the crew dealt this stop. */
+  verse: string;
 };
 
-export const TOTAL_STOPS = 7;
+export const TOTAL_STOPS = 3;
 
+/**
+ * Fixed rotation: the 1st crew to register is dealt Throne, the 2nd the
+ * Registration desk, the 3rd the Lootbox, then it wraps. Labels stay in code
+ * only — players see the verse text alone.
+ */
 export const HUNT_STOPS: HuntStop[] = [
   {
     id: 1,
-    title: "The Silent Stacks",
-    area: "Library stairwell landing — hosts: set the real spot.",
-    riddles: [
-      "Where the loudest crews learn to whisper, and a thousand voyages sleep upright.",
-      "Climb past the Gazettes of forgotten semesters; I wait where the stairs catch their breath.",
-      "Behind the fire-drill map on the landing — look low, sailor.",
-    ],
-    nudge:
-      "Ground floor of the library block. Face the stairs, check the wall frame on your right.",
-    nudge2:
-      "Last resort: library ground floor, stairwell landing — behind the fire-drill map, lower edge.",
+    label: "Throne",
+    verse:
+      "In a system, the user with the highest privileges has the most control. Find the place associated with the highest authority.",
   },
   {
     id: 2,
-    title: "The Galley",
-    area: "Canteen counter — hosts: set the real spot.",
-    riddles: [
-      "Sailors run on more than wind. Follow the smell of victory at noon.",
-      "Where tokens change hands for fuel and the queue bends like a river.",
-      "Under the menu board, beside the counter edge — the mark hides where bills are paid.",
-    ],
-    nudge: "Canteen serving counter. Look beneath the menu board, near the billing corner.",
-    nudge2:
-      "Last resort: canteen billing corner — crouch and check the underside edge of the menu board.",
+    label: "Registration desk",
+    verse:
+      "No account, no access. No details, no entry. Find the place where a user becomes part of the system.",
   },
   {
     id: 3,
-    title: "The Engine Room",
-    area: "Computer lab corridor — hosts: set the real spot.",
-    riddles: [
-      "I hum without sleeping and dream in blue. My heart beats in gigahertz.",
-      "Rows of glowing portholes, one door marked with a number the freshmen fear.",
-      "The pillar outside Lab 2, at shoulder height — the mark keeps watch there.",
-    ],
-    nudge: "First-floor corridor outside Lab 2. Check the pillar facing the lab door.",
-    nudge2:
-      "Last resort: Lab 2 corridor pillar, the face pointing at the lab door — shoulder height.",
-  },
-  {
-    id: 4,
-    title: "The Muster Deck",
-    area: "Main entrance foyer — hosts: set the real spot.",
-    riddles: [
-      "Every voyage begins where all feet first land, beneath the words that name this ship.",
-      "Crews gather, notices flutter, the days orders are pinned for all to read.",
-      "The big notice board by the main entrance — behind the top-right corner notice.",
-    ],
-    nudge: "Main entrance foyer notice board. Top-right corner, behind the freshest notice.",
-    nudge2:
-      "Last resort: main foyer board — lift the top-right notice. The mark is taped behind it.",
-  },
-  {
-    id: 5,
-    title: "The Observatory",
-    area: "Courtyard / open deck — hosts: set the real spot.",
-    riddles: [
-      "No roof, only sky. The wind reads the minutes aloud here.",
-      "Stone benches face the great steps where whole batches have sat and wondered.",
-      "The courtyard bench staring at the auditorium steps — run your hand along its back edge.",
-    ],
-    nudge: "Courtyard bench directly facing the auditorium steps. Feel along the backrest edge.",
-    nudge2:
-      "Last resort: the bench facing the auditorium steps — run your fingers along the backrest rear edge.",
-  },
-  {
-    id: 6,
-    title: "The Chart Room",
-    area: "Seminar hall foyer — hosts: set the real spot.",
-    riddles: [
-      "A hundred chairs face one voice, and every whisper returns thrice.",
-      "Speakers and schedules line the wall; the learned gather, the curious linger.",
-      "Behind the speaker schedule outside the seminar hall — the mark sails there.",
-    ],
-    nudge: "Seminar-hall foyer. Behind the printed speaker schedule on the wall.",
-    nudge2:
-      "Last resort: seminar-hall foyer — the speaker schedule, bottom-right corner, behind the paper.",
-  },
-  {
-    id: 7,
-    title: "The Harbor Office",
-    area: "Event help desk — hosts: set the real spot.",
-    riddles: [
-      "When lost, sailors ask the lighthouse. It answers every question except where the rum went.",
-      "Banners, badges, and the calmest humans on campus — the voyage is administered here.",
-      "The event help desk board — the final mark waits where you first signed in.",
-    ],
-    nudge: "Event help desk. Check the board where crews registered this morning.",
-    nudge2: "Last resort: help desk — the board you registered at this morning, lower-left corner.",
+    label: "Lootbox",
+    verse:
+      "In gaming, rewards are often stored inside a container. Find the physical equivalent of a digital storage container.",
   },
 ];
 
@@ -222,15 +149,17 @@ export function getStopById(id: number): HuntStop {
   return HUNT_STOPS.find((s) => s.id === id) ?? HUNT_STOPS[0]!;
 }
 
-export const MAX_HINTS = 2;
-
-export function hintKeyForStop(id: number, level: 1 | 2 = 1): string {
-  return `stop-${id}-${level}`;
+/** Sequential deal: 1st crew → stop 1, 2nd → stop 2, 3rd → stop 3, then wrap. */
+export function stopIdForTeamCount(count: number): number {
+  const ids = HUNT_STOPS.map((s) => s.id);
+  return ids[((count % ids.length) + ids.length) % ids.length]!;
 }
 
-export function getStopHint(id: number, level: 1 | 2 = 1): string {
-  const stop = getStopById(id);
-  return level === 2 ? stop.nudge2 : stop.nudge;
+/** Offline fallback: stable per crew code, so re-logins on any device agree. */
+export function stopIdForTeamCode(code: string): number {
+  let h = 0;
+  for (let i = 0; i < code.length; i++) h = (h * 31 + code.charCodeAt(i)) >>> 0;
+  return stopIdForTeamCount(h);
 }
 
 export type GameState = {
@@ -245,25 +174,20 @@ export type GameState = {
   r1Index: number;
   r1Wrong: number;
   r1Skips: number;
-  /** Shuffled order of stop ids — different for every crew. */
+  /** Single dealt stop id, wrapped in an array. */
   r2Order: number[];
   /** Position inside r2Order. */
   r2Pos: number;
   /** Stop ids already marked found. */
   r2Found: number[];
-  /** Verse dealt to this crew per stop id (0, 1, or 2) — one of three, fixed at deal time. */
-  r2Verses: Record<string, number>;
   finalQ: number;
   rev: number;
   updatedAt: number;
-  /** Hints remaining for the whole run (shared across devices). */
-  hintsLeft: number;
-  /** Revealed hint nudges by stable key (`stop-N-L`) → text. */
-  revealedHints: Record<string, string>;
 };
 
-const KEY = "grandline-state-v7";
+const KEY = "grandline-state-v8";
 const LEGACY_KEYS = [
+  "grandline-state-v7",
   "grandline-state-v6",
   "grandline-state-v5",
   "grandline-state-v4",
@@ -287,8 +211,7 @@ function isLegacyR1(q: unknown): boolean {
 function isLegacyState(s: GameState): boolean {
   if (!Array.isArray(s.r1Questions) || s.r1Questions.length === 0) return true;
   if (isLegacyR1(s.r1Questions[0])) return true;
-  if (!Array.isArray(s.r2Order) || s.r2Order.length !== TOTAL_STOPS) return true;
-  if (!s.r2Verses || typeof s.r2Verses !== "object") return true;
+  if (!Array.isArray(s.r2Order) || s.r2Order.length !== 1) return true;
   return false;
 }
 
@@ -297,7 +220,7 @@ const PHASES = ["team", "r1", "r1done", "r2intro", "r2", "final", "complete"] as
 /**
  * Rejects rows saved by older app versions (or corrupt payloads) before they
  * can reach the render tree. Stale Supabase rows are the classic white screen:
- * Round 2 reads r2Verses/r2Order off whatever the server hands over.
+ * Round 2 reads r2Order off whatever the server hands over.
  */
 export function isCompatibleState(s: unknown): s is GameState {
   if (!s || typeof s !== "object") return false;
@@ -311,18 +234,12 @@ export function isCompatibleState(s: unknown): s is GameState {
   if (!Array.isArray(g["r1Questions"]) || (g["r1Questions"] as unknown[]).length === 0)
     return false;
   if (isLegacyR1((g["r1Questions"] as unknown[])[0])) return false;
-  if (!Array.isArray(g["r2Order"]) || (g["r2Order"] as unknown[]).length !== TOTAL_STOPS)
-    return false;
-  if (!g["r2Verses"] || typeof g["r2Verses"] !== "object") return false;
+  if (!Array.isArray(g["r2Order"]) || (g["r2Order"] as unknown[]).length !== 1) return false;
   if (!Array.isArray(g["r2Found"])) return false;
-  if (typeof g["hintsLeft"] !== "number") return false;
-  if (!g["revealedHints"] || typeof g["revealedHints"] !== "object") return false;
   return true;
 }
 
 function withDefaults(s: GameState): GameState {
-  if (typeof s.hintsLeft !== "number") s.hintsLeft = MAX_HINTS;
-  if (!s.revealedHints || typeof s.revealedHints !== "object") s.revealedHints = {};
   if (!Array.isArray(s.r2Found)) s.r2Found = [];
   return s;
 }
@@ -405,17 +322,11 @@ export function pickRound1(): Round1Q[] {
   return shuffle(qs);
 }
 
-/** Each crew is dealt one of the three verses per shore — fixed for the whole run. */
-function dealVerses(): Record<string, number> {
-  return Object.fromEntries(HUNT_STOPS.map((s) => [String(s.id), Math.floor(Math.random() * 3)]));
-}
-
-/** Every crew sails a different route through the same seven shores. */
-export function shuffledStopOrder(): number[] {
-  return shuffle(HUNT_STOPS.map((s) => s.id));
-}
-
-export function newGame(teamName: string, teamId: string): GameState {
+export function newGame(
+  teamName: string,
+  teamId: string,
+  stopId: number = HUNT_STOPS[0]!.id,
+): GameState {
   const now = Date.now();
   return {
     teamName,
@@ -429,32 +340,13 @@ export function newGame(teamName: string, teamId: string): GameState {
     r1Index: 0,
     r1Wrong: 0,
     r1Skips: 0,
-    r2Order: shuffledStopOrder(),
+    r2Order: [stopId],
     r2Pos: 0,
     r2Found: [],
-    r2Verses: dealVerses(),
     finalQ: Math.floor(Math.random() * FINAL_QUESTIONS.length),
     rev: 1,
     updatedAt: now,
-    hintsLeft: MAX_HINTS,
-    revealedHints: {},
   };
-}
-
-/** Reveal a hint nudge if the team has any left. Idempotent per key. */
-export function spendHint(
-  s: GameState,
-  key: string,
-  text: string,
-): { next: GameState; ok: boolean; already: boolean } {
-  if (s.revealedHints[key]) return { next: s, ok: true, already: true };
-  if (s.hintsLeft <= 0) return { next: s, ok: false, already: false };
-  const next = withRev({
-    ...s,
-    hintsLeft: s.hintsLeft - 1,
-    revealedHints: { ...s.revealedHints, [key]: text },
-  });
-  return { next, ok: true, already: false };
 }
 
 export function elapsedSec(s: GameState, now = Date.now()): number {

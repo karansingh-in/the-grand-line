@@ -95,22 +95,6 @@ export function Progress({ value, max }: { value: number; max: number }) {
   );
 }
 
-export function HintPips({ left, total = 2 }: { left: number; total?: number }) {
-  return (
-    <span className="inline-flex items-center gap-1.5" aria-label={`${left} hints left`}>
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className={cn(
-            "h-2 w-2 rounded-full border",
-            i < left ? "bg-primary border-primary" : "border-border",
-          )}
-        />
-      ))}
-    </span>
-  );
-}
-
 export function Section({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn("mt-10 first:mt-0", className)}>{children}</div>;
 }

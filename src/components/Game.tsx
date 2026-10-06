@@ -9,18 +9,16 @@ import {
   fmtTime,
   HUNT_STOPS,
   getStopById,
-  getStopHint,
-  hintKeyForStop,
+  stopIdForTeamCount,
+  stopIdForTeamCode,
   FINAL_QUESTIONS,
   normalizeTeamCode,
   withRev,
-  spendHint,
   isCompatibleState,
   type TechId,
 } from "@/lib/game";
-import { fetchTeam, pushTeam, subscribeTeam } from "@/lib/sync";
+import { fetchTeam, fetchTeamCount, pushTeam, subscribeTeam } from "@/lib/sync";
 import { Shell } from "@/components/GameShell";
-import { Leaderboard } from "@/components/Leaderboard";
 import { TechMark } from "@/components/TechMark";
 import { FoilBurst } from "@/components/Atmosphere";
 import {
@@ -29,13 +27,11 @@ import {
   Lede,
   PrimaryButton,
   GhostButton,
-  Card,
   ChapterHead,
   ChartRule,
   OptionRow,
   VerseCard,
   ConfirmButton,
-  HintPips,
 } from "@/components/ui";
 
 export function Compass({ size = 220 }: { size?: number }) {
@@ -280,9 +276,6 @@ function Landing({ onEnter }: { onEnter: () => void }) {
             Best with your crew beside you
           </p>
         </div>
-        <div className="mx-auto mt-14 w-full max-w-sm text-left">
-          <Leaderboard compact />
-        </div>
       </div>
     </div>
   );
@@ -330,7 +323,13 @@ function TeamEntry({ onStart }: { onStart: (existing: GameState) => void }) {
           setTimeout(() => onStart(remote), 1200);
           return;
         }
-        const fresh = newGame(name.trim(), id.trim());
+        const registered = await Promise.race([
+          fetchTeamCount(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        ]);
+        const stopId =
+          registered == null ? stopIdForTeamCode(code) : stopIdForTeamCount(registered);
+        const fresh = newGame(name.trim(), id.trim(), stopId);
         setJoinMsg("The hunt awaits.");
         setStatus("sailing");
         setTimeout(() => onStart(fresh), 1400);
@@ -573,12 +572,6 @@ function Center({
 function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
   const stopId = s.r2Order[0]!;
   const stop = getStopById(stopId);
-  const verseIdx = Math.min(2, Math.max(0, s.r2Verses[String(stopId)] ?? 0));
-  const spendStopHint = (level: 1 | 2) => {
-    const { next, ok } = spendHint(s, hintKeyForStop(stopId, level), getStopHint(stopId, level));
-    if (!ok) return;
-    update(() => ({ ...next, rev: next.rev }));
-  };
 
   const [stamped, setStamped] = useState(false);
   const commitShore = () => {
@@ -603,11 +596,10 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
 
   return (
     <div key={stopId} className="mx-auto w-full max-w-[400px] py-4">
-      <ChapterHead
-        kicker="Chapter two &middot; the walking chart"
-        numeral="I / I"
-        title={<>{stop.title}</>}
-      />
+      <div className="text-center">
+        <Kicker>Chapter two &middot; the walking chart</Kicker>
+        <p className="mt-3 font-display text-sm tracking-[0.3em] text-primary">I / I</p>
+      </div>
 
       <div className="mt-5">
         <p className="text-center font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -615,48 +607,13 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         </p>
       </div>
 
-      <div className="mt-6">
-        <VerseCard index={verseIdx + 1} total={3} fresh>
-          {stop.riddles[verseIdx]!}
+      <div className="mt-8">
+        <VerseCard index={1} total={1} fresh>
+          {stop.verse}
         </VerseCard>
         <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-          The only verse your crew was dealt — make it count
+          The verse your crew was dealt — make it count
         </p>
-      </div>
-
-      <div className="mt-6 flex items-center justify-between border-y border-border py-3">
-        <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-          Chart notes
-        </span>
-        <HintPips left={s.hintsLeft} />
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {([1, 2] as const).map((level) => {
-          const key = hintKeyForStop(stopId, level);
-          const revealed = s.revealedHints[key];
-          const numeral = level === 1 ? "I" : "II";
-          if (revealed) {
-            return (
-              <Card key={key} className="border-primary/50 p-5">
-                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
-                  Chart note {numeral} &middot; spent
-                </p>
-                <p className="mt-2 text-[15px] leading-7">{revealed}</p>
-              </Card>
-            );
-          }
-          return (
-            <ConfirmButton
-              key={key}
-              confirmLabel={s.hintsLeft > 0 ? "Tap again to spend 1 note — sure?" : "No notes left"}
-              onConfirm={() => spendStopHint(level)}
-              disabled={s.hintsLeft <= 0}
-            >
-              Reveal chart note {numeral} ({s.hintsLeft} left){level === 2 ? " — cuts closer" : ""}
-            </ConfirmButton>
-          );
-        })}
       </div>
 
       <ChartRule className="mx-auto mt-10 max-w-[240px]" />
@@ -755,21 +712,17 @@ function Complete({ s, onLeave }: { s: GameState; onLeave: () => void }) {
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           Named {s.r1Questions.length} marks &middot;{" "}
-          {s.r2Found.length > 0 ? `${getStopById(s.r2Found[0]!).title} claimed` : "shore unclaimed"}
+          {s.r2Found.length > 0 ? "shore claimed" : "shore unclaimed"}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {HUNT_STOPS.map((st) => (
             <span
               key={st.id}
-              title={st.title}
               className={`h-2.5 w-2.5 rotate-45 border ${s.r2Found.includes(st.id) ? "bg-primary border-primary" : "border-border"}`}
             />
           ))}
         </div>
         <ChartRule className="mx-auto mt-8 max-w-[220px]" />
-        <div className="mt-8 w-full text-left">
-          <Leaderboard />
-        </div>
         <div className="mt-10 w-full">
           <GhostButton onClick={onLeave}>Leave this device</GhostButton>
           <p className="mt-3 text-[11px] text-muted-foreground">
