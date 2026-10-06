@@ -149,19 +149,22 @@ describe("hints: 2 per team, any shore", () => {
     expect(MAX_HINTS).toBe(2);
   });
 
-  it("spends at most 2 hints, idempotent per stop", () => {
+  it("spends both hints on the same stop, idempotent per level", () => {
     let g = newGame("Crew", "CODE-1");
-    const r1 = spendHint(g, hintKeyForStop(1), getStopHint(1));
+    expect(hintKeyForStop(1, 1)).not.toBe(hintKeyForStop(1, 2));
+    expect(getStopHint(1, 2).length).toBeGreaterThan(10);
+    const r1 = spendHint(g, hintKeyForStop(1, 1), getStopHint(1, 1));
     expect(r1.ok).toBe(true);
     g = r1.next;
     expect(g.hintsLeft).toBe(1);
-    const dup = spendHint(g, hintKeyForStop(1), getStopHint(1));
+    const dup = spendHint(g, hintKeyForStop(1, 1), getStopHint(1, 1));
     expect(dup.already).toBe(true);
     expect(dup.next.hintsLeft).toBe(1);
-    const r2 = spendHint(dup.next, hintKeyForStop(4), getStopHint(4));
+    const r2 = spendHint(dup.next, hintKeyForStop(1, 2), getStopHint(1, 2));
     expect(r2.ok).toBe(true);
     expect(r2.next.hintsLeft).toBe(0);
-    const r3 = spendHint(r2.next, hintKeyForStop(5), getStopHint(5));
+    expect(r2.next.revealedHints[hintKeyForStop(1, 2)]).toBe(getStopHint(1, 2));
+    const r3 = spendHint(r2.next, hintKeyForStop(2, 1), getStopHint(2, 1));
     expect(r3.ok).toBe(false);
     expect(r3.next.hintsLeft).toBe(0);
   });

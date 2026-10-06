@@ -491,7 +491,7 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
       <ChapterHead
         kicker="Chapter one &middot; name the mark"
         numeral={`${s.r1Index + 1} / ${s.r1Questions.length}`}
-        title={<>Which tool bears this mark?</>}
+        title={<span className="font-tech">Which tool bears this mark?</span>}
       />
       <div className="mt-4">
         <TrialPips index={s.r1Index} total={s.r1Questions.length} />
@@ -516,7 +516,7 @@ function Round1({ s, update }: { s: GameState; update: ReturnType<typeof useGame
               disabled={stateOf(o) !== "idle"}
               onClick={() => choose(o)}
             >
-              {o}
+              <span className="font-tech text-[16px]">{o}</span>
             </OptionRow>
           </div>
         ))}
@@ -574,11 +574,8 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
   const stopId = s.r2Order[0]!;
   const stop = getStopById(stopId);
   const verseIdx = Math.min(2, Math.max(0, s.r2Verses[String(stopId)] ?? 0));
-  const hintKey = hintKeyForStop(stopId);
-  const revealedHint = s.revealedHints[hintKey];
-
-  const spendStopHint = () => {
-    const { next, ok } = spendHint(s, hintKey, getStopHint(stopId));
+  const spendStopHint = (level: 1 | 2) => {
+    const { next, ok } = spendHint(s, hintKeyForStop(stopId, level), getStopHint(stopId, level));
     if (!ok) return;
     update(() => ({ ...next, rev: next.rev }));
   };
@@ -634,23 +631,32 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
         <HintPips left={s.hintsLeft} />
       </div>
 
-      <div className="mt-4">
-        {revealedHint ? (
-          <Card className="border-primary/50 p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
-              Chart note &middot; spent
-            </p>
-            <p className="mt-2 text-[15px] leading-7">{revealedHint}</p>
-          </Card>
-        ) : (
-          <ConfirmButton
-            confirmLabel={s.hintsLeft > 0 ? "Tap again to spend 1 note — sure?" : "No notes left"}
-            onConfirm={spendStopHint}
-            disabled={s.hintsLeft <= 0}
-          >
-            Spend a chart note ({s.hintsLeft} of 2 left)
-          </ConfirmButton>
-        )}
+      <div className="mt-4 space-y-3">
+        {([1, 2] as const).map((level) => {
+          const key = hintKeyForStop(stopId, level);
+          const revealed = s.revealedHints[key];
+          const numeral = level === 1 ? "I" : "II";
+          if (revealed) {
+            return (
+              <Card key={key} className="border-primary/50 p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
+                  Chart note {numeral} &middot; spent
+                </p>
+                <p className="mt-2 text-[15px] leading-7">{revealed}</p>
+              </Card>
+            );
+          }
+          return (
+            <ConfirmButton
+              key={key}
+              confirmLabel={s.hintsLeft > 0 ? "Tap again to spend 1 note — sure?" : "No notes left"}
+              onConfirm={() => spendStopHint(level)}
+              disabled={s.hintsLeft <= 0}
+            >
+              Reveal chart note {numeral} ({s.hintsLeft} left){level === 2 ? " — cuts closer" : ""}
+            </ConfirmButton>
+          );
+        })}
       </div>
 
       <ChartRule className="mx-auto mt-10 max-w-[240px]" />

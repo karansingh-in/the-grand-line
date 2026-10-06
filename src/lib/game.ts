@@ -118,6 +118,8 @@ export type HuntStop = {
   riddles: [string, string, string];
   /** Extra nudge, costs 1 of the team's 2 hints. */
   nudge: string;
+  /** Second, near-explicit nudge for the same shore — the other hint. */
+  nudge2: string;
 };
 
 export const TOTAL_STOPS = 7;
@@ -134,6 +136,8 @@ export const HUNT_STOPS: HuntStop[] = [
     ],
     nudge:
       "Ground floor of the library block. Face the stairs, check the wall frame on your right.",
+    nudge2:
+      "Last resort: library ground floor, stairwell landing — behind the fire-drill map, lower edge.",
   },
   {
     id: 2,
@@ -145,6 +149,8 @@ export const HUNT_STOPS: HuntStop[] = [
       "Under the menu board, beside the counter edge — the mark hides where bills are paid.",
     ],
     nudge: "Canteen serving counter. Look beneath the menu board, near the billing corner.",
+    nudge2:
+      "Last resort: canteen billing corner — crouch and check the underside edge of the menu board.",
   },
   {
     id: 3,
@@ -156,6 +162,8 @@ export const HUNT_STOPS: HuntStop[] = [
       "The pillar outside Lab 2, at shoulder height — the mark keeps watch there.",
     ],
     nudge: "First-floor corridor outside Lab 2. Check the pillar facing the lab door.",
+    nudge2:
+      "Last resort: Lab 2 corridor pillar, the face pointing at the lab door — shoulder height.",
   },
   {
     id: 4,
@@ -167,6 +175,8 @@ export const HUNT_STOPS: HuntStop[] = [
       "The big notice board by the main entrance — behind the top-right corner notice.",
     ],
     nudge: "Main entrance foyer notice board. Top-right corner, behind the freshest notice.",
+    nudge2:
+      "Last resort: main foyer board — lift the top-right notice. The mark is taped behind it.",
   },
   {
     id: 5,
@@ -178,6 +188,8 @@ export const HUNT_STOPS: HuntStop[] = [
       "The courtyard bench staring at the auditorium steps — run your hand along its back edge.",
     ],
     nudge: "Courtyard bench directly facing the auditorium steps. Feel along the backrest edge.",
+    nudge2:
+      "Last resort: the bench facing the auditorium steps — run your fingers along the backrest rear edge.",
   },
   {
     id: 6,
@@ -189,6 +201,8 @@ export const HUNT_STOPS: HuntStop[] = [
       "Behind the speaker schedule outside the seminar hall — the mark sails there.",
     ],
     nudge: "Seminar-hall foyer. Behind the printed speaker schedule on the wall.",
+    nudge2:
+      "Last resort: seminar-hall foyer — the speaker schedule, bottom-right corner, behind the paper.",
   },
   {
     id: 7,
@@ -200,6 +214,7 @@ export const HUNT_STOPS: HuntStop[] = [
       "The event help desk board — the final mark waits where you first signed in.",
     ],
     nudge: "Event help desk. Check the board where crews registered this morning.",
+    nudge2: "Last resort: help desk — the board you registered at this morning, lower-left corner.",
   },
 ];
 
@@ -209,12 +224,13 @@ export function getStopById(id: number): HuntStop {
 
 export const MAX_HINTS = 2;
 
-export function hintKeyForStop(id: number): string {
-  return `stop-${id}`;
+export function hintKeyForStop(id: number, level: 1 | 2 = 1): string {
+  return `stop-${id}-${level}`;
 }
 
-export function getStopHint(id: number): string {
-  return getStopById(id).nudge;
+export function getStopHint(id: number, level: 1 | 2 = 1): string {
+  const stop = getStopById(id);
+  return level === 2 ? stop.nudge2 : stop.nudge;
 }
 
 export type GameState = {
@@ -242,12 +258,14 @@ export type GameState = {
   updatedAt: number;
   /** Hints remaining for the whole run (shared across devices). */
   hintsLeft: number;
-  /** Revealed hint nudges by stable key (`stop-N`) → text. */
+  /** Revealed hint nudges by stable key (`stop-N-L`) → text. */
   revealedHints: Record<string, string>;
 };
 
-const KEY = "grandline-state-v6";
+const KEY = "grandline-state-v7";
 const LEGACY_KEYS = [
+  "grandline-state-v6",
+  "grandline-state-v5",
   "grandline-state-v4",
   "grandline-state-v3",
   "grandline-state-v2",
