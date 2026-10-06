@@ -9,9 +9,9 @@ export type TechId =
   | "postgres"
   | "mongodb"
   | "kafka"
-  | "terraform"
-  | "prometheus"
-  | "grafana"
+  | "claude"
+  | "openai"
+  | "perplexity"
   | "linux"
   | "python"
   | "nodejs"
@@ -53,9 +53,9 @@ export const TECH_DECK: { id: TechId; name: string; diff: Difficulty }[] = [
   { id: "react", name: "React", diff: "medium" },
   { id: "postman", name: "Postman", diff: "medium" },
   { id: "kafka", name: "Kafka", diff: "hard" },
-  { id: "terraform", name: "Terraform", diff: "hard" },
-  { id: "prometheus", name: "Prometheus", diff: "hard" },
-  { id: "grafana", name: "Grafana", diff: "hard" },
+  { id: "claude", name: "Claude", diff: "hard" },
+  { id: "openai", name: "ChatGPT", diff: "hard" },
+  { id: "perplexity", name: "Perplexity", diff: "hard" },
   { id: "nginx", name: "Nginx", diff: "hard" },
   { id: "aws", name: "AWS", diff: "hard" },
 ];
@@ -72,7 +72,8 @@ export const TECH_BY_ID: Record<TechId, { name: string; diff: Difficulty }> = Ob
 const FAMILIES: TechId[][] = [
   ["docker", "kubernetes"],
   ["redis", "postgres", "mongodb", "kafka"],
-  ["terraform", "prometheus", "grafana", "nginx", "aws"],
+  ["nginx", "aws"],
+  ["openai", "claude", "perplexity"],
   ["git", "github"],
   ["python", "nodejs", "react", "npm"],
   ["linux", "vscode", "postman"],
