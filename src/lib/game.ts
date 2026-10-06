@@ -1,26 +1,26 @@
 export type Difficulty = "easy" | "medium" | "hard";
 
 export type TechId =
-  | "instagram"
-  | "whatsapp"
-  | "youtube"
-  | "googlechrome"
-  | "gmail"
-  | "netflix"
-  | "google"
-  | "spotify"
-  | "facebook"
-  | "googlemaps"
-  | "snapchat"
-  | "telegram"
-  | "amazon"
-  | "android"
-  | "x"
-  | "linkedin"
-  | "samsung"
-  | "apple"
-  | "openai"
-  | "googlepay";
+  | "github"
+  | "git"
+  | "docker"
+  | "kubernetes"
+  | "redis"
+  | "postgres"
+  | "mongodb"
+  | "kafka"
+  | "terraform"
+  | "prometheus"
+  | "grafana"
+  | "linux"
+  | "python"
+  | "nodejs"
+  | "react"
+  | "nginx"
+  | "aws"
+  | "vscode"
+  | "npm"
+  | "postman";
 
 /** Round 1 is pure identification: see the real mark, name the tech. */
 export type Round1Q = {
@@ -38,26 +38,26 @@ export type IconQ = Round1Q;
 export type PracticalQ = Round1Q;
 
 export const TECH_DECK: { id: TechId; name: string; diff: Difficulty }[] = [
-  { id: "whatsapp", name: "WhatsApp", diff: "easy" },
-  { id: "youtube", name: "YouTube", diff: "easy" },
-  { id: "instagram", name: "Instagram", diff: "easy" },
-  { id: "googlechrome", name: "Google Chrome", diff: "easy" },
-  { id: "gmail", name: "Gmail", diff: "easy" },
-  { id: "netflix", name: "Netflix", diff: "easy" },
-  { id: "google", name: "Google", diff: "easy" },
-  { id: "spotify", name: "Spotify", diff: "medium" },
-  { id: "facebook", name: "Facebook", diff: "medium" },
-  { id: "googlemaps", name: "Google Maps", diff: "medium" },
-  { id: "snapchat", name: "Snapchat", diff: "medium" },
-  { id: "telegram", name: "Telegram", diff: "medium" },
-  { id: "amazon", name: "Amazon", diff: "medium" },
-  { id: "android", name: "Android", diff: "medium" },
-  { id: "x", name: "X (Twitter)", diff: "hard" },
-  { id: "linkedin", name: "LinkedIn", diff: "hard" },
-  { id: "samsung", name: "Samsung", diff: "hard" },
-  { id: "apple", name: "Apple", diff: "hard" },
-  { id: "openai", name: "ChatGPT", diff: "hard" },
-  { id: "googlepay", name: "Google Pay", diff: "hard" },
+  { id: "github", name: "GitHub", diff: "easy" },
+  { id: "git", name: "Git", diff: "easy" },
+  { id: "docker", name: "Docker", diff: "easy" },
+  { id: "linux", name: "Linux", diff: "easy" },
+  { id: "python", name: "Python", diff: "easy" },
+  { id: "vscode", name: "VS Code", diff: "easy" },
+  { id: "npm", name: "npm", diff: "easy" },
+  { id: "kubernetes", name: "Kubernetes", diff: "medium" },
+  { id: "redis", name: "Redis", diff: "medium" },
+  { id: "postgres", name: "PostgreSQL", diff: "medium" },
+  { id: "mongodb", name: "MongoDB", diff: "medium" },
+  { id: "nodejs", name: "Node.js", diff: "medium" },
+  { id: "react", name: "React", diff: "medium" },
+  { id: "postman", name: "Postman", diff: "medium" },
+  { id: "kafka", name: "Kafka", diff: "hard" },
+  { id: "terraform", name: "Terraform", diff: "hard" },
+  { id: "prometheus", name: "Prometheus", diff: "hard" },
+  { id: "grafana", name: "Grafana", diff: "hard" },
+  { id: "nginx", name: "Nginx", diff: "hard" },
+  { id: "aws", name: "AWS", diff: "hard" },
 ];
 
 export const TECH_NAME: Record<TechId, string> = Object.fromEntries(
@@ -70,12 +70,12 @@ export const TECH_BY_ID: Record<TechId, { name: string; diff: Difficulty }> = Ob
 
 /** Tools that look alike stay together — wrong answers sting more. */
 const FAMILIES: TechId[][] = [
-  ["instagram", "whatsapp", "facebook", "snapchat", "telegram", "x", "linkedin"],
-  ["youtube", "googlechrome", "gmail", "googlemaps", "google"],
-  ["netflix", "spotify"],
-  ["amazon", "googlepay"],
-  ["android", "apple", "samsung"],
-  ["openai"],
+  ["docker", "kubernetes"],
+  ["redis", "postgres", "mongodb", "kafka"],
+  ["terraform", "prometheus", "grafana", "nginx", "aws"],
+  ["git", "github"],
+  ["python", "nodejs", "react", "npm"],
+  ["linux", "vscode", "postman"],
 ];
 
 function familyOf(id: TechId): TechId[] {

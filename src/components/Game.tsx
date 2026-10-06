@@ -231,7 +231,7 @@ function Timer({ s, onLeave }: { s: GameState; onLeave: () => void }) {
   );
 }
 
-const TEASER: TechId[] = ["instagram", "spotify", "whatsapp", "youtube"];
+const TEASER: TechId[] = ["docker", "kubernetes", "python", "react"];
 
 function Landing({ onEnter }: { onEnter: () => void }) {
   return (
