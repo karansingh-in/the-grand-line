@@ -36,13 +36,10 @@ Empty the `teams` table before the event so the rotation starts at zero.
 
 ## Final — hosts, read this
 
-The final question is announced offline (on stage), so the app shows
-only an answer box. Every crew expects the SAME answer: `FINAL_QUESTIONS[0]`
-in `src/lib/game.ts`. Set its `a` to the answer of whatever you announce.
-
-No QR codes, no scanning — the round is entirely on foot. Old
-`/fragment`, `/decoy`, and `/final` links now show a retired notice and
-point back at the game.
+The final question is announced offline (on stage) and the app shows
+only an answer box. There is NO checking: any answer — even empty —
+finishes the hunt, and nothing typed is stored anywhere. Judge the
+answers yourselves, offline.
 
 ## Deploy to Vercel
 
