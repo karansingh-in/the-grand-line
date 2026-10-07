@@ -11,7 +11,6 @@ import {
   getStopById,
   stopIdForTeamCount,
   stopIdForTeamCode,
-  FINAL_QUESTIONS,
   normalizeTeamCode,
   withRev,
   isCompatibleState,
@@ -694,16 +693,14 @@ function Round2({ s, update }: { s: GameState; update: ReturnType<typeof useGame
   );
 }
 
-function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
-  const q = FINAL_QUESTIONS[s.finalQ % FINAL_QUESTIONS.length]!;
-  const [ans, setAns] = useState("");
-  const [err, setErr] = useState(false);
+function Final({ update }: { s: GameState; update: ReturnType<typeof useGame>["update"] }) {
   return (
     <form
       className="mx-auto w-full max-w-[340px] py-10 text-center"
       onSubmit={(e) => {
         e.preventDefault();
-        if (ans.trim().toLowerCase() !== q.a) return setErr(true);
+        // No checking: any answer (even empty) finishes the hunt. The typed
+        // value is uncontrolled and never stored anywhere — hosts judge offline.
         update((g) => ({ ...g, phase: "complete", endTs: Date.now() }));
       }}
     >
@@ -715,16 +712,7 @@ function Final({ s, update }: { s: GameState; update: ReturnType<typeof useGame>
         <br />
         Type the answer below.
       </p>
-      <input
-        className={`${inputCls} mt-8 text-center`}
-        value={ans}
-        onChange={(e) => {
-          setAns(e.target.value);
-          setErr(false);
-        }}
-        placeholder="Your answer"
-      />
-      {err && <p className="mt-4 text-sm text-accent">Not yet, captain.</p>}
+      <input className={`${inputCls} mt-8 text-center`} placeholder="Your answer (optional)" />
       <div className="mt-8">
         <PrimaryButton>Submit Final Answer</PrimaryButton>
       </div>
